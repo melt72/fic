@@ -1,0 +1,6 @@
+{
+    "require": {
+        "netflie/whatsapp-cloud-api": "^2.1",
+        "intervention/image": "^2.7"
+    }
+}
