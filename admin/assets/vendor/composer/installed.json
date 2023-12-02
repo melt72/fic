@@ -1,6 +1,68 @@
 {
     "packages": [
         {
+            "name": "fattureincloud/fattureincloud-php-sdk",
+            "version": "v2.0.23",
+            "version_normalized": "2.0.23.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fattureincloud/fattureincloud-php-sdk.git",
+                "reference": "b24842b9e53bdc08e3940c9779204197b4292538"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fattureincloud/fattureincloud-php-sdk/zipball/b24842b9e53bdc08e3940c9779204197b4292538",
+                "reference": "b24842b9e53bdc08e3940c9779204197b4292538",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "guzzlehttp/guzzle": "^7.4.5",
+                "guzzlehttp/psr7": "^2.1.1",
+                "php": "^7.3 || ^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.4",
+                "phpunit/phpunit": "^9.0"
+            },
+            "time": "2023-10-09T10:44:19+00:00",
+            "type": "library",
+            "installation-source": "source",
+            "autoload": {
+                "psr-4": {
+                    "FattureInCloud\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fatture in Cloud API Team",
+                    "homepage": "https://www.fattureincloud.it"
+                }
+            ],
+            "description": "Connect your software with Fatture in Cloud, the invoicing platform chosen by more than 500.000 businesses in Italy.   The Fatture in Cloud API is based on REST, and makes possible to interact with the user related data prior authorization via OAuth2 protocol.",
+            "homepage": "https://www.fattureincloud.it",
+            "keywords": [
+                "api",
+                "openapi",
+                "openapi-generator",
+                "openapitools",
+                "php",
+                "rest",
+                "sdk"
+            ],
+            "support": {
+                "issues": "https://github.com/fattureincloud/fattureincloud-php-sdk/issues",
+                "source": "https://github.com/fattureincloud/fattureincloud-php-sdk/tree/v2.0.23"
+            },
+            "install-path": "../fattureincloud/fattureincloud-php-sdk"
+        },
+        {
             "name": "graham-campbell/result-type",
             "version": "v1.1.1",
             "version_normalized": "1.1.1.0",

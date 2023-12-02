@@ -19,5 +19,6 @@ return array(
     'GuzzleHttp\\Promise\\' => array($vendorDir . '/guzzlehttp/promises/src'),
     'GuzzleHttp\\' => array($vendorDir . '/guzzlehttp/guzzle/src'),
     'GrahamCampbell\\ResultType\\' => array($vendorDir . '/graham-campbell/result-type/src'),
+    'FattureInCloud\\' => array($vendorDir . '/fattureincloud/fattureincloud-php-sdk/lib'),
     'Dotenv\\' => array($vendorDir . '/vlucas/phpdotenv/src'),
 );
