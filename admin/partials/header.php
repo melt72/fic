@@ -25,9 +25,14 @@
     <!-- style css -->
     <link href="assets/css/style.css" rel="stylesheet">
     <link href="assets/css/plugins.css" rel="stylesheet">
+    <link href="assets/plugins/bootstrap5-editable/css/bootstrap-editable.css" rel="stylesheet">
 
     <!--- Animations css-->
     <link href="assets/css/animate.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/plugins/material-inputs/input-material.css">
-
+    <!-- <link rel="stylesheet" href="assets/plugins/material-inputs/input-material.css"> -->
+    <style>
+        .datepicker {
+            z-index: 99999 !important;
+        }
+    </style>
 </head>

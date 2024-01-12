@@ -742,7 +742,9 @@ function get_clients($page = 1)
     }
 }
 
-//funzione per prelevare le fatture da fatture in cloud
+/**
+ * *funzione per prelevare le fatture da fatture in cloud
+ *  */
 function get_fatture($page = 1, $data_inizio = null)
 {
     include 'config-api.php';
@@ -764,20 +766,6 @@ function get_fatture($page = 1, $data_inizio = null)
             $issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'invoice', null, 'detailed', null, $page, 50);
         }
 
-
-        // else {
-        //     //altrimenti prelevo le fatture in base al tipo
-        //     $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
-        //     $issuedEInvoices = $issuedEInvoicesApi->getIssuedDocument($firstCompanyId, $id_doc);
-
-        // }
-
-        // $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
-        // $campi = "amount_net,entity,amount_vat";
-
-        // $q = "date > '2023-10-21'";
-        // // id, tipo, campi  , detailed, , page, per_page, filtro
-        // $issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'invoice', null, 'detailed', null, $page, 50, $q);
         //se ci sono fatture leggo il numero di pagine
         if ($issuedEInvoices->getData()) {
             $pagine = $issuedEInvoices['last_page']; //numero di fatture trovate
@@ -829,7 +817,9 @@ function get_fatture($page = 1, $data_inizio = null)
     }
 }
 
-//funzione per prelevare la fattura singola da fatture in cloud
+/**
+ * *funzione per prelevare la fattura singola da fatture in cloud
+ *  */
 function get_fattura($id_doc)
 {
     include 'config-api.php';
@@ -878,7 +868,9 @@ function get_fattura($id_doc)
     }
 }
 
-//Funzione per prelevare lo status della fattura
+/**
+ * *Funzione per prelevare lo status della fattura
+ *  */
 function get_status($id_doc)
 {
     include 'config-api.php';
@@ -898,5 +890,1167 @@ function get_status($id_doc)
         return $status;
     } catch (Exception $e) {
         echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;
+    }
+}
+
+/**
+ * *Lista delle zone di Roma
+ *  */
+
+function get_zone($citta = '1')
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    try {
+        $query = "SELECT * FROM `zone_roma` WHERE id_citta='$citta' ORDER BY `nome_zona` ASC";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        return   $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funzione per il nome della zona partendo dal suo id
+function get_nome_zona($id_zona)
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    try {
+        $query = "SELECT * FROM `zone_roma` WHERE id_zona='$id_zona'";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['nome_zona'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Lista dei clienti divisi per zone
+ *  */
+
+function get_clienti_zone($zona = '1')
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    try {
+        $query = "SELECT * FROM `agenti_roma` INNER JOIN clienti ON agenti_roma.id_cfic=clienti.id_cfic WHERE agenti_roma.id_zona='$zona' ORDER BY `nome` ASC";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        return   $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per vedere se un cliente è associato a una zona e nome della zona
+ *  */
+
+function cliente_associato($id_cliente)
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    try {
+        $query = "SELECT * FROM `agenti_roma` INNER JOIN zone_roma ON agenti_roma.id_zona=zone_roma.id_zona WHERE id_cfic='$id_cliente'";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        //se il cliente è associato ritorno true
+        if ($stmt->rowCount() > 0) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['nome_zona'];
+        } else {
+            return '--';
+        }
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Lista dei clienti totali
+ */
+
+function get_clienti_totali($filtro = 'all')
+{
+    $clienti = array();
+    require __DIR__ . '/../../include/configpdo.php';
+
+    switch ($filtro) {
+        case 'all':
+            $query = "SELECT * FROM `clienti` ORDER BY `nome` ASC";
+            break;
+
+        default:
+            $query = "SELECT * FROM `clienti` WHERE `provincia`='$filtro' ORDER BY `nome` ASC";
+            break;
+    }
+
+    try {
+
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        $dati = $stmt->fetchAll();
+        foreach ($dati as $row) {
+            // creo un array con i parametri di configurazione
+            $clienti[$row['id_cfic']]['id'] = $row['id_cfic'];
+            $clienti[$row['id_cfic']]['nome'] = $row['nome'];
+            $clienti[$row['id_cfic']]['citta'] = $row['citta'];
+            $clienti[$row['id_cfic']]['provincia'] = $row['provincia'];
+            $clienti[$row['id_cfic']]['paese'] = $row['paese'];
+            // controllo se il cliente è associato ad una zona
+            $status = cliente_associato($row['id_cfic']);
+            if ($status != '--') {
+                $clienti[$row['id_cfic']]['associato'] = $status;
+            } else {
+                $clienti[$row['id_cfic']]['associato'] = '--';
+            }
+        }
+        return $clienti;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Lista degli agenti totali
+ */
+
+function get_agenti_totali()
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    try {
+        $query = "SELECT * FROM `agenti` ORDER BY `nome_agente` ASC";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//funzione per i dati del singolo agente
+function get_agente($id_agente)
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    try {
+        $query = "SELECT * FROM `agenti` WHERE `id`=:id_agente";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Lista delle fatture per un determinato anno
+function get_fatture_anno($year = 'all')
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    $query = "SELECT nome, fatture.id AS id_fatt, sigla, num_f, imp_netto, imp_iva, imp_tot, data_f, data_scadenza, status, id_liquidazione FROM fatture INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic ";
+
+    switch ($year) {
+        case 'all':
+            $query .= "ORDER BY data_f DESC";
+            break;
+
+        case 'recenti':
+            $query .= "WHERE YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM fatture) ORDER BY data_f DESC";
+            break;
+
+        default:
+            $query .= "WHERE YEAR(data_f) = :i ORDER BY data_f DESC";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('i', $year, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchAll();
+    }
+
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+
+// lista delle fatture di un agente
+function get_fatture_agente($id_agente, $year = 'all')
+{
+    require __DIR__ . '/../../include/configpdo.php';
+
+    // Parte comune della query
+    $commonQuery = "SELECT nome, fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione` FROM `fatture` 
+                    INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic 
+                    INNER JOIN agenti ON fatture.sigla=agenti.sigla 
+                    WHERE agenti.id=:id_agente";
+
+    switch ($year) {
+        case 'all':
+            $query = $commonQuery . " ORDER BY `data_f` DESC";
+            break;
+
+        case 'recenti':
+            $query = $commonQuery . " AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) ORDER BY `data_f` DESC";
+            break;
+
+        default:
+            $query = $commonQuery . " AND YEAR(data_f)=:year ORDER BY `data_f` DESC";
+    }
+
+    $stmt = $db->prepare($query);
+    $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);
+
+    if ($year !== 'all' && $year !== 'recenti') {
+        $stmt->bindParam(':year', $year, PDO::PARAM_STR);
+    }
+
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+
+function get_fatture_zona($id_zona, $year = 'all')
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    switch ($year) {
+        case 'all':
+            $query = "SELECT  fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`  FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente ORDER BY `data_f` DESC";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+            break;
+
+        case 'recenti':
+            $query = "SELECT  fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`  FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic WHERE fatture.sigla='RSC' AND agenti_roma.id_zona=:id_zona AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`)";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+            break;
+
+        default:
+            $query = "SELECT  fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`  FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f)='$year' ORDER BY `data_f` DESC";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+            break;
+    }
+}
+/**
+ * *status della fattura
+ */
+function status_fattura($id_fatt)
+{
+    require __DIR__ . '/../../include/configpdo.php';
+
+    try {
+        $query = "SELECT * FROM `fatture` WHERE `id`=:id_fatt";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_fatt', $id_fatt, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $data_scadenza = $row['data_scadenza'];
+        $status = $row['status'];
+        $liquidata = $row['id_liquidazione'];
+        $data_oggi = date('Y-m-d');
+        $status_fattura = '';
+
+        if ($status == '' || $status == null) {
+            $status_fattura = '<span class="badge badge-pill bg-danger me-1 my-2">Errore</span>';
+        }
+        if ($status == 'paid') {
+            $status_fattura = '<span class="badge badge-pill bg-primary me-1 my-2">Pagata</span>';
+
+            // Verifica se l'agente è associato
+            $agente_associato = getDatiAgente($row['sigla']);
+
+            if ($liquidata == '' && $agente_associato !== '--') {
+                $status_fattura = '<span class="badge badge-pill bg-primary me-1 my-2">Da liquidare</span>';
+            } elseif ($liquidata != '') {
+                $status_fattura = '<span class="badge badge-pill bg-success me-1 my-2">Liquidata</span>';
+            }
+        }
+        if ($status == 'not_paid') {
+            $status_fattura = '<span class="badge badge-pill bg-light me-1 my-2">Non ancora pagata</span>';
+        }
+
+        if ($status == 'not_paid' && $data_oggi > $data_scadenza) {
+            $status_fattura = '<span class="badge badge-pill bg-warning me-1 my-2">Scaduta</span>';
+        }
+
+        return $status_fattura;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+
+
+//Funziona che determina gli anni disponibili per le fatture
+function getAnniFatture()
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT DISTINCT YEAR(data_f) as anno FROM `fatture` ORDER BY `anno` ASC";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funzione per determinare l'anno più recente
+function getAnnoRecente()
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT MAX(YEAR(data_f)) as anno FROM `fatture`";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['anno'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//anni disponibili per i prodotti marketing
+function getAnniFattureAgente($id)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT DISTINCT YEAR(data_f) as anno FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente ORDER BY `anno` ASC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_agente', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+//anni disponibili per i Le zone
+function getAnniFattureZone($id)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT DISTINCT YEAR(data_f) as anno FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic WHERE agenti_roma.id_zona=:id_zona ORDER BY `anno` ASC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_zona', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funzione per arrotondare e formattare un numero
+function arrotondaEFormatta($numero)
+{
+    // Arrotonda il numero
+    $numeroArrotondato = round($numero, 2);
+
+    // Utilizza number_format per formattare il numero con due decimali
+    // e un punto come separatore decimale
+    $numeroFormattato = number_format($numeroArrotondato, 2, ',', '.');
+
+    return $numeroFormattato;
+}
+
+/**
+ * *statistiche agente
+ */
+
+/**
+ * *Fatturato dell'agente
+ */
+function getFatturatoTotAgente($id_agente, $year = 'all')
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    switch ($year) {
+        case 'all':
+            $query = "SELECT SUM(imp_tot) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);  // Aggiunto i due punti
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'recenti':
+            $query = "SELECT SUM(imp_tot) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`)";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);  // Aggiunto i due punti
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        default:
+            $query = "SELECT SUM(imp_tot) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f)='$year'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);  // Aggiunto i due punti
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+    }
+}
+
+function getFatturatoTotZona($id_zona = 0, $year = 'all')
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    switch ($year) {
+        case 'all':
+
+            if ($id_zona == 0) {
+                $query = "SELECT SUM(imp_tot) AS fatturato FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic WHERE fatture.sigla='RSC'";
+            } else {
+                $query = "SELECT SUM(imp_tot) AS fatturato FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic WHERE fatture.sigla='RSC' AND agenti_roma.id_zona='$id_zona'";
+            }
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'recenti':
+            $query = "SELECT SUM(imp_tot) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`)";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        default:
+            $query = "SELECT SUM(imp_tot) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f)='$year'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+    }
+}
+//Fatturato netto dell'agente
+function getFatturatoNettoAgente($id_agente, $tipo = 'all', $year = 'all')
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    switch ($tipo) {
+        case 'all':
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'recenti':
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`)";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'incassato': //fatturato incassato anno corrente
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) AND status='paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'incassato_anno': //fatturato incassato anno selezionato
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = '$year' AND status='paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'da_incassare': //fatturato da incassare anno corrente
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) AND status='not_paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'da_incassare_anno': //fatturato da incassare anno selezionato
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = '$year' AND status='not_paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        default:
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f)='$year'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+    }
+}
+function getFatturatoNettoZona($id_zona = 0, $tipo = 'all', $year = 'all')
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    switch ($tipo) {
+        case 'all':
+            if ($id_zona == 0) {
+                $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic WHERE fatture.sigla='RSC'";
+            } else {
+                $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic WHERE fatture.sigla='RSC' AND agenti_roma.id_zona='$id_zona'";
+            }
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'recenti':
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`)";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'incassato': //fatturato incassato anno corrente
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) AND status='paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'incassato_anno': //fatturato incassato anno selezionato
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = '$year' AND status='paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'da_incassare': //fatturato da incassare anno corrente
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) AND status='not_paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        case 'da_incassare_anno': //fatturato da incassare anno selezionato
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = '$year' AND status='not_paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+
+        default:
+            $query = "SELECT SUM(imp_netto) AS fatturato FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f)='$year'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['fatturato'];
+            break;
+    }
+}
+//Funzione per la provvigione dell'agente
+function getProvvigioneAgente($id_agente, $tipo = 'all', $year = 'all')
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    switch ($tipo) {
+        case 'all':
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return $provvigione;
+            break;
+
+        case 'totale_liquidata': //provvigione liquidata totale
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND id_liquidazione!=''";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return arrotondaEFormatta($provvigione);
+            break;
+
+        case 'totale_da_liquidare': //provvigione da liquidare totale
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND (id_liquidazione IS NULL OR id_liquidazione = '')";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return arrotondaEFormatta($provvigione);
+
+            break;
+
+
+        case 'recenti':
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`)";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return $provvigione;
+            break;
+
+        case 'liquidata': //fatturato incassato anno corrente
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) AND status='paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $provvigione = $row['provvigione'];
+            return $provvigione;
+            break;
+
+        case 'liquidata_anno': //fatturato incassato anno selezionato
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = '$year' AND status='paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return $provvigione;
+            break;
+
+        case 'da_liquidare': //fatturato da incassare anno corrente
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) AND status='not_paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return arrotondaEFormatta($provvigione);
+            break;
+
+        case 'da_liquidare_anno': //fatturato da incassare anno selezionato
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = '$year' AND status='not_paid'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return $provvigione;
+            break;
+
+        default:
+            $query = "SELECT SUM(imp_netto*provv_percent/100) AS provvigione FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f)='$year'";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $provvigione = $row['provvigione'];
+            return $provvigione;
+            break;
+    }
+}
+
+
+//funzione per la lista delle liquidazioni di un agente
+function getLiquidazioniAgente($id_agente)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT liquidazioni.id as id, data,importo,pagamento,note FROM `liquidazioni` INNER JOIN agenti ON liquidazioni.sigla=agenti.sigla WHERE agenti.id=:id_agente ORDER BY `data` DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+function getLiquidazioniZona($id_zona)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `liquidazioni` WHERE sigla='RSC' AND zona=:id_zona ORDER BY `data` DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//funzione per selezionare le fatture da liquidare di un agente
+function getFattureDaLiquidareAgente($id_agente)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT *, (`imp_netto` * `provv_percent` / 100) AS provvigione, fatture.id AS id_fatt FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '') ORDER BY `data_f` DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+function getFattureDaLiquidareZona($id_zona)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT *, SUM(`imp_netto` * 16 / 100) AS provvigione, fatture.id AS id_fatt FROM `fatture` INNER JOIN agenti_roma ON fatture.id_cfic=agenti_roma.id_cfic WHERE agenti_roma.id_zona=:id_zona AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '') ORDER BY `data_f` DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+//Funzione che calcola il totale della  della liquidazione per un agente
+function getTotaleLiquidazioneAgente($id_agente)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT SUM(`imp_netto` * `provv_percent` / 100) AS totale FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '')";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row['totale'] == null) {
+            return 0;
+        } else {
+            return $row['totale'];
+        }
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funziona che calcola il totale della  della liquidazione per tutte le zone
+ */
+function getTotaleLiquidazioneZoneRoma()
+{
+    //Inizializzo un array complessivo
+    $array = array();
+
+    include(__DIR__ . '/../../include/configpdo.php');
+    $zone = get_zone(); //$zone è un array con tutte le zone
+    $totale_complessivo = 0;
+    $totale_a = 0;
+    $totale_b = 0;
+    foreach ($zone as $zona) {
+        $nome_zona = $zona['nome_zona'];
+        $id_zona = $zona['id_zona'];
+        $totale = 0; //totale della liquidazione
+        $a = 0; //totale della liquidazione per l'agente 
+        $b = 0; //totale della liquidazione per agenzia
+        try {
+            $query = "SELECT (`imp_netto` * 16 / 100) AS totale, provv_percent AS tipo FROM `fatture` INNER JOIN agenti_roma ON fatture.id_cfic=agenti_roma.id_cfic WHERE agenti_roma.id_zona=:id_zona AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '')";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
+            $stmt->execute();
+            $dati =  $stmt->fetchAll();
+            foreach ($dati as $row) {
+                switch ($row['tipo']) { //tipo di provvigione 1=50% agente 2=100% agenzia 3=caso particolare di roma (50% agenzia e il restante ripartito tra le altre zone)
+                    case '1':
+                        $a += $row['totale'] / 2;
+                        $b += $row['totale'] / 2;
+                        break;
+                    case '2':
+                        $a += 0;
+                        $b += $row['totale'];
+                        break;
+                    case '3': //caso particolare di roma (50% agenzia e il restante ripartito tra le altre zone)
+                        $a += $row['totale'] / 2;
+                        $b += $row['totale'] / 2;
+                        break;
+                }
+                $totale += $row['totale'];
+            }
+            $totale_complessivo += $totale;
+            $totale_a += $a;
+            $totale_b += $b;
+            $array[$id_zona] = array(
+                'nome' => $nome_zona, //nome della zona
+                'totale' => $totale,
+                'a' => $a,
+                'b' => $b
+            );
+        } catch (PDOException $e) {
+            echo "Error : " . $e->getMessage();
+        }
+    }
+    // $array['totale_complessivo'] = array(
+    //     'totale' => $totale_complessivo,
+    //     'a' => $totale_a,
+    //     'b' => $totale_b
+    // );
+    return $array;
+}
+
+/**
+ * *Funzione che calcola il totale della  della liquidazione per una zona
+ */
+function getTotaleLiquidazioneZona($id_zona)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    $totale = 0;
+    $a = 0;
+    $b = 0;
+    try {
+        $query = "SELECT (`imp_netto` * 16 / 100) AS totale, provv_percent AS tipo FROM `fatture` INNER JOIN agenti_roma ON fatture.id_cfic=agenti_roma.id_cfic WHERE agenti_roma.id_zona = :id_zona AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '')";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_zona', $id_zona, PDO::PARAM_INT);  // Aggiunto i due punti
+        $stmt->execute();
+        $dati = $stmt->fetchAll();
+        foreach ($dati as $row) {
+            if ($row['tipo'] == 1) {
+                $a += $row['totale'] / 2;
+                $b += $row['totale'] / 2;
+            } else {
+                $a += 0;
+                $b += $row['totale'];
+            }
+            $totale += $row['totale'];
+        }
+        $array = array(
+            'totale' => $totale,
+            'a' => $a,
+            'b' => $b
+        );
+        return $array;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funzione che ricava la sigla dell'agente dal suo id
+function getSiglaAgente($id_agente)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT sigla FROM `agenti` WHERE `id`=:id_agente";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['sigla'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione che ricava i dati agenti dalla sigla
+ */
+function getDatiAgente($sigla)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `agenti` WHERE `sigla`=:sigla";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':sigla', $sigla, PDO::PARAM_STR);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) :
+            return $row['nome_agente'];
+        else :
+            return '--';
+        endif;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione che scrive nel database la liquidazione
+ */
+function setLiquidazione($sigla, $data, $totale, $metodopagamento, $note)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "INSERT INTO `liquidazioni`(`sigla`, `data`, `importo`, `pagamento`, `note`) VALUES (:sigla,:data_liq,:totale,:metodopagamento,:note)";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('sigla', $sigla, PDO::PARAM_STR);
+        $stmt->bindParam('data_liq', $data, PDO::PARAM_STR);
+        $stmt->bindParam('totale', $totale, PDO::PARAM_STR);
+        $stmt->bindParam('metodopagamento', $metodopagamento, PDO::PARAM_STR);
+        $stmt->bindParam('note', $note, PDO::PARAM_STR);
+        $stmt->execute();
+        return $db->lastInsertId();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//  Funzione che aggiorna le fatture con l'id della liquidazione
+function updateFattureLiquidazione($id_liquidazione, $id_fatture)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "UPDATE `fatture` SET `id_liquidazione`=:id_liquidazione WHERE `id`=:id_fatture";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
+        $stmt->bindParam('id_fatture', $id_fatture, PDO::PARAM_INT);
+        $stmt->execute();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funzione che mi ritorna il metodo di pagamento in base al numero
+function getMetodoPagamento($numero)
+{
+    switch ($numero) {
+        case '1':
+            # code...
+            return 'Bonifico';
+            break;
+        case '2':
+            # code...
+            return 'Assegno';
+            break;
+        case '3':
+            # code...
+            return 'Contanti';
+            break;
+    }
+}
+
+/**
+ * *Funzione per le fatture di Roma
+ */
+function get_fatture_roma($year = 'all')
+{
+    require __DIR__ . '/../../include/configpdo.php';
+
+    switch ($year) {
+        case 'all':
+            $query = "SELECT  fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione` FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente ORDER BY `data_f` DESC";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+            break;
+
+        case 'recenti':
+            $maxYearQuery = "SELECT MAX(YEAR(data_f)) AS max_year FROM `fatture` WHERE sigla='RSC'";
+            $stmtMaxYear = $db->prepare($maxYearQuery);
+            $stmtMaxYear->execute();
+            $maxYearResult = $stmtMaxYear->fetch(PDO::FETCH_ASSOC);
+            $maxYear = $maxYearResult['max_year'];
+
+            $query = "SELECT fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`, nome_zona FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic INNER JOIN zone_roma ON agenti_roma.id_zona=zone_roma.id_zona WHERE fatture.sigla='RSC' AND YEAR(data_f) = :maxYear";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':maxYear', $maxYear, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+            break;
+
+        default:
+            $query = "SELECT fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione` FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = :year ORDER BY `data_f` DESC";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);
+            $stmt->bindParam(':year', $year, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+            break;
+    }
+}
+
+// function get_fatture_roma($year = 'all')
+// {
+//     require __DIR__ . '/../../include/configpdo.php';
+//     switch ($year) {
+//         case 'all':
+//             $query = "SELECT  fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`  FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente ORDER BY `data_f` DESC";
+//             $stmt = $db->prepare($query);
+//             $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+//             $stmt->execute();
+//             return $stmt->fetchAll();
+//             break;
+
+//         case 'recenti':
+//             $query = "SELECT  fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`, nome_zona  FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic INNER JOIN zone_roma ON agenti_roma.id_zona=zone_roma.id_zona WHERE fatture.sigla='RSC' AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`);";
+//             $stmt = $db->prepare($query);
+//             $stmt->execute();
+//             return $stmt->fetchAll();
+//             break;
+
+//         default:
+//             $query = "SELECT  fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`  FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f)='$year' ORDER BY `data_f` DESC";
+//             $stmt = $db->prepare($query);
+//             $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
+//             $stmt->execute();
+//             return $stmt->fetchAll();
+//             break;
+//     }
+// }
+
+/**
+ * *Anni disponibili per Roma
+ */
+function getAnniFattureRoma()
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT DISTINCT YEAR(data_f) as anno FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic  ORDER BY `anno` ASC";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzioni per le liquidazioni di Roma
+ */
+function getLiquidazioniRoma()
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `liquidazioni` WHERE sigla = :sigla ORDER BY `data` DESC";
+        $stmt = $db->prepare($query);
+        $sigla = 'RSC';
+        $stmt->bindParam(':sigla', $sigla, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+
+/**
+ * *Funzioni per l'analisi dei dati
+ */
+
+//Funzione per determinare il totale, tutta l'incassato e totale da incassare
+function getTotalFromQuery($db, $query)
+{
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row['totale'];
+}
+
+function analisiTotale($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        // Totale
+        $queryTotale = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno";
+        $totale = getTotalFromQuery($db, $queryTotale);
+
+        // Incassato
+        $queryIncassato = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno AND status='paid'";
+        $incassato = getTotalFromQuery($db, $queryIncassato);
+
+        // Da incassare
+        $da_incassare = $totale - $incassato;
+
+        // Non pagato scaduto
+        $queryNonPagatoScaduto = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno AND status='not_paid' AND data_scadenza < CURDATE()";
+        $non_pagato_scaduto = getTotalFromQuery($db, $queryNonPagatoScaduto);
+
+        $array = array(
+            'totale' => $totale,
+            'incassato' => $incassato,
+            'da_incassare' => $da_incassare,
+            'non_pagato_scaduto' => $non_pagato_scaduto
+        );
+        return $array;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+
+/**
+ * *Funzione per determinare l'imponibile totale per ciascuno dei 12 mesi di un certo anno .
+ */
+function analisiImponibile($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $array = array();
+        for ($i = 1; $i <= 12; $i++) {
+            $query = "SELECT SUM(imp_netto) AS imponibile FROM `fatture` WHERE YEAR(data_f) = :anno AND MONTH(data_f) = :mese";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+            $stmt->bindParam(':mese', $i, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $imponibile = $row['imponibile'];
+            $array[$i] = $imponibile;
+        }
+        return $array;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+
+
+/**
+ * *Funzione per determinare l'imponibile totale per i quattro trimestri di un anno
+ */
+function analisiImponibileTrimestre($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $array = array();
+        for ($i = 1; $i <= 4; $i++) {
+            $startMonth = ($i - 1) * 3 + 1;
+            $endMonth = $i * 3;
+
+            $query = "SELECT SUM(imp_netto) AS imponibile FROM `fatture` WHERE YEAR(data_f) = :anno AND MONTH(data_f) BETWEEN :startMonth AND :endMonth";
+
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+            $stmt->bindParam(':startMonth', $startMonth, PDO::PARAM_INT);
+            $stmt->bindParam(':endMonth', $endMonth, PDO::PARAM_INT);
+
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $imponibile = $row['imponibile'];
+            $array[$i] = $imponibile;
+        }
+        return $array;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
     }
 }

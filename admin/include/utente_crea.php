@@ -11,15 +11,16 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
     include('../../include/configpdo.php');
 
     // create an image manager instance with favored driver
-    $manager = new ImageManager(['driver' => 'gd']);
+    $manager = new ImageManager(
+        new Intervention\Image\Drivers\Gd\Driver()
+    );
+
 
     $nome = ucfirst($_POST['nome']);
     $cognome = ucfirst($_POST['cognome']);
     $email = $_POST['mail'];
     $ruolo = $_POST['ruolo'];
     $idutente = $_POST['idutente'];
-
-
 
     $controllo = PasswordCasuale(8);
     try {
@@ -60,10 +61,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         $dsty = 250;
 
         $filename = PasswordCasuale(8)  . '.' . $fileExtension;
-        $image = $manager->make($src)->resize($dstx, null, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
+        $image = $manager->read($src)->cover($dstx, $dsty);
         $image->save($dst . '/' . $filename);
 
         // AGGIUNGO L'IMMAGINE AL PROFILO
