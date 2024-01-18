@@ -24,8 +24,9 @@ foreach ($clienti as $cliente) {
         $stmt->bindParam('provincia', $provincia, PDO::PARAM_STR);
         $stmt->bindParam('paese', $paese, PDO::PARAM_STR);
         $stmt->execute();
+        echo 'aggiunto cliente<br>';
     } else {
-        echo 'il cliente è già presente nel database';
+        echo 'il cliente è già presente nel database<br>';
     }
 }
 echo 'fine';

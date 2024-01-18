@@ -901,7 +901,7 @@ function get_zone($citta = '1')
 {
     require __DIR__ . '/../../include/configpdo.php';
     try {
-        $query = "SELECT * FROM `zone_roma` WHERE id_citta='$citta' ORDER BY `nome_zona` ASC";
+        $query = "SELECT * FROM `zone_roma` WHERE id_citta='$citta' ORDER BY `id_zona` ASC";
         $stmt = $db->prepare($query);
         $stmt->execute();
         return   $stmt->fetchAll();
@@ -1959,9 +1959,10 @@ function getLiquidazioniRoma()
  */
 
 //Funzione per determinare il totale, tutta l'incassato e totale da incassare
-function getTotalFromQuery($db, $query)
+function getTotalFromQuery($db, $anno, $query)
 {
     $stmt = $db->prepare($query);
+    $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row['totale'];
@@ -1973,24 +1974,24 @@ function analisiTotale($anno)
     try {
         // Totale
         $queryTotale = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno";
-        $totale = getTotalFromQuery($db, $queryTotale);
+        $totale = getTotalFromQuery($db,  $anno, $queryTotale);
 
         // Incassato
         $queryIncassato = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno AND status='paid'";
-        $incassato = getTotalFromQuery($db, $queryIncassato);
+        $incassato = getTotalFromQuery($db, $anno,  $queryIncassato);
 
         // Da incassare
         $da_incassare = $totale - $incassato;
 
         // Non pagato scaduto
         $queryNonPagatoScaduto = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno AND status='not_paid' AND data_scadenza < CURDATE()";
-        $non_pagato_scaduto = getTotalFromQuery($db, $queryNonPagatoScaduto);
+        $non_pagato_scaduto = getTotalFromQuery($db, $anno,  $queryNonPagatoScaduto);
 
         $array = array(
-            'totale' => $totale,
-            'incassato' => $incassato,
-            'da_incassare' => $da_incassare,
-            'non_pagato_scaduto' => $non_pagato_scaduto
+            'totale' => arrotondaEFormatta($totale),
+            'incassato' => arrotondaEFormatta($incassato),
+            'da_incassare' => arrotondaEFormatta($da_incassare),
+            'non_pagato_scaduto' => arrotondaEFormatta($non_pagato_scaduto)
         );
         return $array;
     } catch (PDOException $e) {
@@ -1998,10 +1999,8 @@ function analisiTotale($anno)
     }
 }
 
+//Funzione per determinare l'imponibile totale per ciascuno dei 12 mesi di un certo anno .
 
-/**
- * *Funzione per determinare l'imponibile totale per ciascuno dei 12 mesi di un certo anno .
- */
 function analisiImponibile($anno)
 {
     include(__DIR__ . '/../../include/configpdo.php');
@@ -2015,7 +2014,10 @@ function analisiImponibile($anno)
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $imponibile = $row['imponibile'];
-            $array[$i] = $imponibile;
+            if ($imponibile == null) {
+                $imponibile = '0';
+            }
+            $array[] = $imponibile; // Modifica qui per pushare il valore nell'array
         }
         return $array;
     } catch (PDOException $e) {
@@ -2023,8 +2025,25 @@ function analisiImponibile($anno)
     }
 }
 
-
-
+//Funziona per determinare l'imponibile netto per un determinato anno .
+function analisiImponibileNetto($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT SUM(imp_netto) AS imponibile FROM `fatture` WHERE YEAR(data_f) = :anno";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $imponibile = $row['imponibile'];
+        if ($imponibile == null) {
+            $imponibile = '0';
+        }
+        return $imponibile;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
 /**
  * *Funzione per determinare l'imponibile totale per i quattro trimestri di un anno
  */
@@ -2047,10 +2066,514 @@ function analisiImponibileTrimestre($anno)
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $imponibile = $row['imponibile'];
-            $array[$i] = $imponibile;
+            if ($imponibile == null) {
+                $array[$i] = 'N/A';
+            } else {
+                $array[$i] = arrotondaEFormatta($imponibile);
+            }
         }
         return $array;
     } catch (PDOException $e) {
         echo "Error : " . $e->getMessage();
     }
+}
+
+//Funzione per determinare imponibile netto per ciascun paese per un determinato anno .
+function analisiImponibilePerPaese($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        c.paese,
+        SUM(f.imp_netto) AS somma_imponibile,
+        (SUM(f.imp_netto) / (SELECT SUM(imp_netto) FROM fatture WHERE YEAR(data_f) =:anno)) * 100 AS percentuale
+    FROM
+        fatture f
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic
+    WHERE
+        YEAR(f.data_f) = :anno
+    GROUP BY
+        c.paese
+    ORDER BY
+        somma_imponibile DESC;
+    ";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+
+/**
+ * *Funzione per determinare Il numero di bottiglie vendute per un determinato anno
+ */
+
+function analisiBottiglie($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT SUM(prodotti.qta) AS totale_qta FROM `prodotti` 
+                   INNER JOIN fatture ON prodotti.id_ffic = fatture.id_ffic 
+                   WHERE YEAR(fatture.data_f) = :anno";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result['totale_qta'];
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per determinare Il numero di bottiglie è venduto per ciascun prodotto di un determinato anno .
+ */
+function analisiBottigliePerProdotto($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        nome_prodotto,
+        SUM(p.qta) AS quantita_prodotto
+    FROM
+        fatture f INNER JOIN prodotti p ON f.id_ffic=p.id_ffic
+    JOIN
+        lista_prodotti lp ON p.id_prod = lp.prod_id
+    WHERE
+        YEAR(f.data_f) = :anno
+    GROUP BY
+        YEAR(f.data_f),
+        nome_prodotto";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per determinare Il numero di bottiglie Venduto in ciascuna provincia.
+ */
+function analisiBottigliePerProvincia($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    $tot = analisiBottiglie($anno);
+    try {
+        $query = "SELECT
+        nome_provincia,
+        SUM(p.qta) AS quantita_prodotto,
+        SUM(p.qta)/$tot*100 AS percentuale
+    FROM
+        fatture f INNER JOIN prodotti p ON f.id_ffic=p.id_ffic
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic
+     JOIN 
+     province pr ON c.provincia=pr.pv   
+    WHERE
+        YEAR(f.data_f) = :anno AND pr.stato='IT'
+    GROUP BY
+        YEAR(f.data_f),
+         nome_provincia
+         ORDER by quantita_prodotto DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare l imponibile venduto per ciascuna provincia in un determinato anno
+function analisiImponibilePerProvincia($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        nome_provincia,
+        SUM(f.imp_netto) AS imponibile,
+        SUM(f.imp_netto)/(SELECT SUM(imp_netto) FROM fatture WHERE YEAR(data_f) =:anno)*100 AS percentuale
+    FROM
+        fatture f
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic
+     JOIN 
+     province pr ON c.provincia=pr.pv   
+    WHERE
+        YEAR(f.data_f) = :anno AND pr.stato='IT'
+    GROUP BY
+        nome_provincia
+    ORDER BY
+        imponibile DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+/**
+ * *Funzione per determinare Il numero di bottiglie Venduto in ciascuna macro regione.
+ */
+function analisiBottigliePerMacroRegione($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    try {
+        $query = "SELECT
+            pr.nome_macro AS regione,
+            SUM(p.qta) AS totale_bottiglie
+        FROM
+            fatture f
+        JOIN
+            prodotti p ON f.id_ffic = p.id_ffic
+        JOIN
+            clienti c ON f.id_cfic = c.id_cfic
+        JOIN 
+            province pr ON c.provincia = pr.pv
+        WHERE
+            YEAR(f.data_f) = :anno AND pr.stato='IT'  
+        GROUP BY
+            regione";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+//Funzione per determinare i migliori clienti per un determinato anno .
+function analisiMiglioriClienti($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        c.nome AS nome_cliente,
+        c.provincia,
+        SUM(f.imp_netto) AS imponibile
+    FROM
+        fatture f
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic
+    WHERE
+        YEAR(f.data_f) = :anno
+    GROUP BY
+        c.id_cfic
+    ORDER BY
+        imponibile DESC
+    LIMIT 15";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+//Funzione per determinare importo netto per Una macro regione .
+function analisiImportoPerMacroRegione($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    $tot = analisiImponibileNetto($anno);
+    try {
+        $query = "SELECT
+            pr.nome_macro AS regione,
+            SUM(f.imp_netto) AS totale_importo,
+            SUM(f.imp_netto)/$tot*100 AS percentuale_importo
+        FROM
+            fatture f
+        JOIN
+            clienti c ON f.id_cfic = c.id_cfic
+        JOIN 
+            province pr ON c.provincia = pr.pv
+        WHERE
+            YEAR(f.data_f) = :anno AND pr.stato='IT'  
+        GROUP BY
+            regione";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per determinare Il numero di bottiglie Venduto in ciascuna citta.
+ */
+function analisiBottigliePerCitta($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    $tot = analisiBottiglie($anno);
+    try {
+        $query = "SELECT
+        citta,
+        SUM(p.qta) AS quantita_prodotto,
+        SUM(p.qta)/$tot*100 AS percentuale
+    FROM
+        fatture f INNER JOIN prodotti p ON f.id_ffic=p.id_ffic
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic   
+    WHERE
+        YEAR(f.data_f) = :anno
+    GROUP BY
+        YEAR(f.data_f),
+         citta
+         ORDER by quantita_prodotto DESC;";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per determinare Il tipo di bottiglia 75 cm o 150 cl ..
+ */
+
+function analisiBottigliePerTipo($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        // Ottieni il totale delle bottiglie per l'anno specificato
+        $tot = analisiBottiglie($anno);
+
+        // Query per ottenere la quantità totale di bottiglie da 75cl e 150cl
+        $query = "SELECT
+            SUM(CASE WHEN lp.nome_prodotto LIKE '%75CL%' THEN p.qta ELSE 0 END) AS quantita_75cl,
+            SUM(CASE WHEN lp.nome_prodotto LIKE '%150CL%' THEN p.qta ELSE 0 END) AS quantita_150cl,
+            (SUM(CASE WHEN lp.nome_prodotto LIKE '%75CL%' THEN p.qta ELSE 0 END) / $tot) * 100 AS percentuale_75cl,
+            (SUM(CASE WHEN lp.nome_prodotto LIKE '%150CL%' THEN p.qta ELSE 0 END) / $tot) * 100 AS percentuale_150cl
+        FROM
+            fatture f
+            INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+            JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+        WHERE
+            YEAR(f.data_f) = :anno";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Restituisci i risultati
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per determinare Il numero di bottiglie Per ciascuna varietà di vino
+ */
+function analisiBottigliePerVarieta($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    // Ottieni il totale delle bottiglie per l'anno specificato
+    $tot = analisiBottiglie($anno);
+    try {
+        $query = "SELECT
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%CABERNET%' THEN p.qta ELSE 0 END) AS cabernet,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%CHARDONNAY%' THEN p.qta ELSE 0 END) AS chardonay,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%FILOROSSO%' THEN p.qta ELSE 0 END) AS filorosso ,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%FRIULANO%' THEN p.qta ELSE 0 END) AS friulano,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%MALVASIA%' THEN p.qta ELSE 0 END) AS malvasia,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%GRIGIO%' THEN p.qta ELSE 0 END) AS grigio,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%NERO%' THEN p.qta ELSE 0 END) AS nero,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%RIBOLLA%' THEN p.qta ELSE 0 END) AS ribolla,
+        SUM(CASE WHEN lp.nome_prodotto LIKE '%SAUVIGNON%' THEN p.qta ELSE 0 END) AS sauvignon,
+                    
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%CABERNET%' THEN p.qta ELSE 0 END) / $tot) * 100 AS cabernet_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%CHARDONNAY%' THEN p.qta ELSE 0 END) / $tot) * 100 AS chardonay_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%FILOROSSO%' THEN p.qta ELSE 0 END) / $tot) * 100 AS filorosso_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%FRIULANO%' THEN p.qta ELSE 0 END) / $tot) * 100 AS friulano_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%MALVASIA%' THEN p.qta ELSE 0 END) / $tot) * 100 AS malvasia_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%GRIGIO%' THEN p.qta ELSE 0 END) / $tot) * 100 AS grigio_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%NERO%' THEN p.qta ELSE 0 END) / $tot) * 100 AS nero_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%RIBOLLA%' THEN p.qta ELSE 0 END) / $tot) * 100 AS ribolla_percent,
+        (SUM(CASE WHEN lp.nome_prodotto LIKE '%SAUVIGNON%' THEN p.qta ELSE 0 END) / $tot) * 100 AS sauvignon_percent
+    FROM
+        fatture f
+        INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+        JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+    WHERE
+        YEAR(f.data_f) = :anno";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per determinare Il numero di bottiglie Per mese e varietà specifica di vino
+ */
+function analisiBottigliePerMeseVarieta($anno, $varieta)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $array = array();
+        for ($i = 1; $i <= 12; $i++) {
+            $query = "SELECT
+            SUM(p.qta) AS quantita_prodotto
+        FROM
+            fatture f
+            INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+            JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+        WHERE
+            YEAR(f.data_f) = :anno AND MONTH(f.data_f) = :mese AND lp.nome_prodotto LIKE :varieta";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+            $stmt->bindParam(':mese', $i, PDO::PARAM_INT);
+            $varietaLike = '%' . $varieta . '%'; // Aggiungi il carattere jolly % prima e dopo la varietà
+            $stmt->bindParam(':varieta', $varietaLike, PDO::PARAM_STR);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $imponibile = $row['quantita_prodotto'];
+            if ($imponibile === null) {
+                $imponibile = '0';
+            }
+            $array[] = $imponibile;
+        }
+        return $array;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione per determinare Il numero di bottiglie Per varietà E id_prod .
+ */
+function analisiBottigliePerVarietaId($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    $array = array('cabernet', 'chardonnay', 'filorosso', 'friulano', 'malvasia', 'pinot grigio', 'pinot nero', 'ribolla', 'sauvignon', 'castadiva');
+    $resultArray = array();
+
+    foreach ($array as $varieta) {
+        try {
+            $query = "SELECT
+                lp.nome_prodotto,
+                SUM(p.qta) AS quantita_prodotto
+            FROM
+                fatture f
+                INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+                JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+            WHERE
+                YEAR(f.data_f) = :anno AND lp.nome_prodotto LIKE :varieta
+            GROUP BY
+                lp.nome_prodotto
+                ORDER BY
+    lp.nome_prodotto";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+            $varietaLike = '%' . $varieta . '%'; // Aggiungi il carattere jolly % prima e dopo la varietà
+            $stmt->bindParam(':varieta', $varietaLike, PDO::PARAM_STR);
+            $stmt->execute();
+
+            $prodottiVarieta = array();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $nomeProdotto = $row['nome_prodotto'];
+                $quantita = $row['quantita_prodotto'];
+
+                $prodottiVarieta[] = array('nome' => $nomeProdotto, 'quantita' => $quantita);
+            }
+
+            $resultArray[$varieta] = $prodottiVarieta;
+        } catch (PDOException $e) {
+            echo "Error : " . $e->getMessage();
+        }
+    }
+
+    return $resultArray;
+}
+
+/**
+ * *Funzione per determinare Il numero di bottiglie Per varietà E id_prod .
+ */
+function sommaQuantitaPerParola($varietà, $parolaChiave)
+{
+    $somma = 0;
+
+    if (isset($varietà) && is_array($varietà)) {
+        foreach ($varietà as $prodotto) {
+            foreach ($prodotto as $dettaglio) {
+                // Verifica se la parola chiave è presente nel nome del prodotto
+                if (stripos($dettaglio['nome'], $parolaChiave) !== false) {
+                    // Aggiungi la quantità del prodotto alla somma
+                    $somma += $dettaglio['quantita'];
+                }
+            }
+        }
+    }
+
+    return $somma;
 }

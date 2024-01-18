@@ -42,8 +42,12 @@
 <script src="assets/js/themecolor.js"></script>
 <!-- Tooltip js -->
 <script src="assets/js/tooltip.js"></script>
+<!--Internal  Chart.bundle js -->
+<script src="assets/plugins/chart.js/Chart.bundle.min.js"></script>
 
+<!--Internal Apexchart js-->
 
+<script src="assets/js/apexcharts.js"></script>
 <!-- Apexchart js-->
 <!-- <script src="assets/js/apexcharts.js"></script>
 <script src="assets/js/jquery.vmap.sampledata.js"></script> -->
@@ -63,8 +67,7 @@
 <script src="assets/plugins/edit-table/bst-edittable.js"></script>
 <script src="assets/plugins/bootstrap5-editable/js/bootstrap-editable.min.js"></script>
 
-<!--Internal  Chart.bundle js -->
-<script src="assets/plugins/chart.js/Chart.bundle.min.js"></script>
+
 
 <!-- Moment js -->
 <script src="assets/plugins/moment/moment.js"></script>
@@ -75,8 +78,7 @@
 <!-- Moment js -->
 <script src="assets/plugins/raphael/raphael.min.js"></script>
 
-<!--Internal Apexchart js-->
-<script src="assets/js/apexcharts.js"></script>
+
 <!-- DATA TABLE JS-->
 <script src="assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
 <script src="assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>

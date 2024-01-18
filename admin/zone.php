@@ -106,11 +106,20 @@ include 'partials/header.php';
                                                                 <div class="col-md-12 d-flex  justify-content-between">
                                                                     <div class="mb-3">
                                                                         <label for="" class="form-label"> Ripartizione predefinita:</label>
-                                                                        <select class="form-select form-select prov_tipo" name="prov_tipo" id="prov_tipo" data-id="<?= $zona['id_zona'] ?>">
-                                                                            <option selected>Select one</option>
-                                                                            <option value="1" <?= $zona['provv'] == 1 ? ' selected' : '' ?>>50% Agente - 50% Agenzia</option>
-                                                                            <option value="2" <?= $zona['provv'] == 2 ? ' selected' : '' ?>>100% Agenzia</option>
-                                                                        </select>
+                                                                        <?php
+                                                                        if ($zona['provv'] != 3) {
+
+                                                                        ?>
+                                                                            <select class="form-select form-select prov_tipo" name="prov_tipo" id="prov_tipo" data-id="<?= $zona['id_zona'] ?>">
+                                                                                <option selected>Select one</option>
+                                                                                <option value="1" <?= $zona['provv'] == 1 ? ' selected' : '' ?>>50% Agente - 50% Agenzia</option>
+                                                                                <option value="2" <?= $zona['provv'] == 2 ? ' selected' : '' ?>>100% Agenzia</option>
+                                                                            </select>
+                                                                        <?php
+                                                                        } else {
+                                                                            echo 'Non è possibile modificare la ripartizione predefinita';
+                                                                        }
+                                                                        ?>
                                                                     </div>
 
                                                                     <div><button class="btn btn-primary associazona" data-id="<?= $zona['id_zona']  ?>">Associa Cliente</button></div>

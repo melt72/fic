@@ -277,3 +277,55 @@ function get_status($id_doc)
         echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;
     }
 }
+
+//Funzione per determinare la percentuale di provvigione di default in base alla sigla dell'agente
+function get_percentuale($sigla, $cod_cliente = '')
+{
+    $percentuale = 0;
+    include 'include/configpdo.php';
+    switch ($sigla) {
+        case 'RSC': //Agenzia di Roma
+            //Controllo la tabella agenti Roma inner join . Zone Roma . Per determinare la provvigione di default per quel cliente e quella zona .
+            $sql = "SELECT * FROM agenti_roma INNER JOIN zone_roma ON agenti_roma.id_zona = zone_roma.id_zona WHERE agenti_roma.id_cfic = :cod_cliente";
+            $stmt = $db->prepare($sql);
+            $stmt->bindParam('cod_cliente', $cod_cliente, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($result) {
+                $percentuale = $result['provv'];
+            } else {
+                $percentuale = 0;
+            }
+            break;
+
+        default: //Altri agenti
+            $sql = "SELECT * FROM agenti WHERE sigla = :sigla";
+            $stmt = $db->prepare($sql);
+            $stmt->bindParam('sigla', $sigla, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($result) {
+                $percentuale = $result['provv'];
+            } else {
+                $percentuale = 0;
+            }    # code...
+            break;
+    }
+    return $percentuale;
+}
+
+//Funzione per determinare la data dell'ultima fattura emessa
+function get_data_ultima_fattura()
+{
+    include 'include/configpdo.php';
+    $sql = "SELECT MAX(data_f) AS ultima_data FROM fatture";
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($result) {
+        $last_date = $result['ultima_data'];
+    } else {
+        $last_date = '0';
+    }
+    return $last_date;
+}

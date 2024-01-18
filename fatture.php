@@ -1,10 +1,16 @@
 <?php
 include 'functions.php';
 include 'include/configpdo.php';
+if (isset($_GET['d'])) {
+    $data_ultima_fattura = $_GET['d'];
+} else {
+    $data_ultima_fattura = get_data_ultima_fattura();
+}
+
 //prelevo i clienti da fatture in cloud
 
-$fatture = get_fatture('1', '2023-11-01');
-print_r($fatture);
+$fatture = get_fatture('1', $data_ultima_fattura);
+$prima_parte = '';
 //controllo se la fattura è già presente nel database altrimenti la inserisco
 foreach ($fatture as $fattura) {
     $id = $fattura['id'];
@@ -15,8 +21,8 @@ foreach ($fatture as $fattura) {
     $imp_tot = $fattura['imp_tot'];
     $agente = $fattura['note'];
     $parti = explode('-', $agente);
-
     $prima_parte = $parti[0];
+    $provv_percent = get_percentuale($prima_parte, $cliente);
     $status = $fattura['status'];
     $data = $fattura['data'];
     $data_scadenza = $fattura['data_scadenza'];
@@ -29,7 +35,7 @@ foreach ($fatture as $fattura) {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$result) {
         //se la fattura non è presente nel database la inserisco
-        $sql = "INSERT INTO fatture (id_ffic, id_cfic,sigla, num_f, imp_netto, imp_iva, imp_tot, status, data_f, data_scadenza) VALUES (:id, :cliente, :sigla, :numero, :imp_netto, :imp_iva, :imp_tot, :status, :data, :data_scadenza)";
+        $sql = "INSERT INTO fatture (id_ffic, id_cfic,sigla, num_f, imp_netto, imp_iva, imp_tot, status, data_f, data_scadenza,  provv_percent) VALUES (:id, :cliente, :sigla, :numero, :imp_netto, :imp_iva, :imp_tot, :status, :data, :data_scadenza, :provv_percent)";
         $stmt = $db->prepare($sql);
         $stmt->bindParam('id', $id, PDO::PARAM_INT);
         $stmt->bindParam('cliente', $cliente, PDO::PARAM_INT);
@@ -41,8 +47,9 @@ foreach ($fatture as $fattura) {
         $stmt->bindParam('status', $status, PDO::PARAM_STR);
         $stmt->bindParam('data', $data, PDO::PARAM_STR);
         $stmt->bindParam('data_scadenza', $data_scadenza, PDO::PARAM_STR);
+        $stmt->bindParam('provv_percent', $provv_percent, PDO::PARAM_STR);
         $stmt->execute();
-
+        echo 'aggiunta fattura<br>';
         // Accedi ai prodotti
         foreach ($fattura['prodotti'] as $prodotto) {
             if ($prodotto['cod_prodotto'] == null) {
@@ -56,6 +63,7 @@ foreach ($fatture as $fattura) {
                 $stmt->bindParam('idffic', $id, PDO::PARAM_INT);
                 $stmt->bindParam('quantita', $prodotto['quantita'], PDO::PARAM_INT);
                 $stmt->execute();
+                echo 'aggiunto prodotto<br>';
             }
         }
     } else {
@@ -67,6 +75,7 @@ foreach ($fatture as $fattura) {
             $stmt->bindParam('id', $id, PDO::PARAM_INT);
             $stmt->bindParam('status', $status, PDO::PARAM_STR);
             $stmt->execute();
+            echo 'fattura aggiornata ' . $id . '<br>';
         }
     }
 }
