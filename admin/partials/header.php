@@ -34,5 +34,35 @@
         .datepicker {
             z-index: 99999 !important;
         }
+
+        .clear {
+            clear: both;
+            margin-top: 20px;
+        }
+
+        #searchResult {
+            list-style: none;
+            padding: 0px;
+            width: 250px;
+            position: absolute;
+            margin: 0;
+            z-index: 9999;
+        }
+
+        #searchResult li {
+            background: white;
+            padding: 4px;
+            margin-bottom: 1px;
+            color: #000;
+        }
+
+        /* #searchResult li:nth-child(even) {
+            background: cadetblue;
+            color: white;
+        } */
+
+        #searchResult li:hover {
+            cursor: pointer;
+        }
     </style>
 </head>

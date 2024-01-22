@@ -197,7 +197,7 @@ if (isset($_GET['id'])) {
                                                                                 foreach ($fatture as $fattura) {
                                                                                 ?>
                                                                                     <tr>
-                                                                                        <td>Bella</td>
+                                                                                        <td><?= $fattura['nome'] ?></td>
                                                                                         <td><?= $fattura['num_f'] ?></td>
                                                                                         <td>Data: <?= date('d/m/Y', strtotime($fattura['data_f'])) ?><br>Scad: <?= date('d/m/Y', strtotime($fattura['data_scadenza'])) ?> </td>
                                                                                         <td><?= arrotondaEFormatta($fattura['imp_tot']) ?> €</td>

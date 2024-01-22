@@ -1,5 +1,28 @@
 <?php
+// funzione per generare una password casuale
+function PasswordCasuale($lunghezza = 8, $tipo = 'all')
+{
+    //$caratteri_disponibili ="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+    switch ($tipo) {
+        case 'all':
+            $caratteri_disponibili = "abcdefghijklmnpqrstuvwxyz123456789"; # code...
+            break;
 
+        case 'num':
+            $caratteri_disponibili = "123456789"; # code...
+            break;
+
+        default:
+            $caratteri_disponibili = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; # code...
+            break;
+    }
+
+    $password = "";
+    for ($i = 0; $i < $lunghezza; $i++) {
+        $password = $password . substr($caratteri_disponibili, rand(0, strlen($caratteri_disponibili) - 1), 1);
+    }
+    return $password;
+}
 //Funzione per prelevare i prodotti da fatture in cloud .
 function get_products($page = 1)
 {
@@ -149,7 +172,16 @@ function get_fatture($page = 1, $data_inizio = '0')
             } else {
                 $data_scadenza = null;
             }
-
+            if ($issuedEInvoice->getPaymentsList()) {
+                $pagamento = $issuedEInvoice->getPaymentsList()[0]->getPaidDate(); //data di pagamento della fattura
+                if ($pagamento != null) {
+                    $pagamento = $pagamento->format('Y-m-d');
+                } else {
+                    $pagamento = '';
+                }
+            } else {
+                $pagamento = '';
+            }
 
             //la data in formato aaaa-mm-gg
 
@@ -168,16 +200,19 @@ function get_fatture($page = 1, $data_inizio = '0')
                 'note' => $oggetto,
                 'status' => $status,
                 'data' => $data,
-                'data_scadenza' => $data_scadenza
+                'data_scadenza' => $data_scadenza,
+                'data_pagamento' => $pagamento
             );
             // Iterare attraverso la lista dei prodotti
             foreach ($prodotti_fattura as $prodotto) {
                 $cod_prodotto = $prodotto->getProductId(); // codice del prodotto
+                $nome_prodotto = $prodotto->getName(); // nome del prodotto
                 $quantita = $prodotto->getQty(); // quantità del prodotto
                 if ($quantita != '1') { //Escludo le quantità date in omaggio
                     // Aggiungere il prodotto e la quantità all'array
                     $lista_prodotti[] = array(
                         'cod_prodotto' => $cod_prodotto,
+                        'nome_prodotto' => $nome_prodotto,
                         'quantita' => $quantita
                     );
                 }
@@ -328,4 +363,33 @@ function get_data_ultima_fattura()
         $last_date = '0';
     }
     return $last_date;
+}
+
+function determinaVarietaVino($nome_stringa)
+{
+    $array_varieta = array(
+        'Cabernet',
+        'Chardonnay',
+        'Filorosso',
+        'Friulano',
+        'Malvasia',
+        'Pinot Grigio',
+        'Pinot Nero',
+        'Ribolla',
+        'Sauvignon',
+        'Castadiva'
+    );
+    $nome_stringa_minuscolo = strtolower($nome_stringa);
+
+    foreach ($array_varieta as $varieta) {
+        $varieta_minuscolo = strtolower($varieta);
+
+        // Utilizza stripos per verificare la presenza della varietà nella stringa
+        if (stripos($nome_stringa_minuscolo, $varieta_minuscolo) !== false) {
+            return $varieta;
+        }
+    }
+
+    // Se nessuna corrispondenza è stata trovata
+    return "Varietà non trovata";
 }

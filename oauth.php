@@ -44,7 +44,6 @@ if (isset($_SESSION['token'])) {
             $obj = $oauth->fetchToken($code);
             if (!isset($obj->error)) {
                 $_SESSION['token'] = $obj->getAccessToken();
-                $_SESSION['token_expires'] = $obj->getExpires();
                 $_SESSION['refresh'] = $obj->getRefreshToken();
                 $accessToken = $_SESSION['token'];
                 // Utilizza $accessToken per effettuare chiamate API sicure

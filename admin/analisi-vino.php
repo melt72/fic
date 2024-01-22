@@ -51,7 +51,6 @@ $varieta_vino = 'cabernet';
                     <div class="d-flex my-xl-auto right-content align-items-center">
                         <?php
                         $anni_disponibili = getAnniFatture();
-
                         ?>
                         <div class="mb-xl-0">
                             <div class="dropdown">
@@ -146,58 +145,65 @@ $varieta_vino = 'cabernet';
                 <!-- row -->
                 <?php
                 $varieta_totale = analisiBottigliePerVarietaId($anno);
-                print_r($varieta_totale)
+
                 ?>
                 <div class="row row-sm">
                     <div class="col-md-6 col-lg-6 col-xl-6">
                         <div class="card card-dashboard-eight pb-2">
                             <h6 class="card-title text-danger">Varietà di vini ROSSI</h6><span class="d-block mg-b-10 text-muted tx-12">Bottiglie vendute in base alla varietà</span>
-                            <div class="list-group border">
-                                <div class="list-group-item border-top-0" id="br-t-0">
-                                    <?php $cab = sommaQuantitaPerParola($varieta_totale, 'CABERNET') ?>
-                                    <p>Cabernet</p><span><?= $cab ?> BT</span><span><?= number_format($cab / $bottiglie * 100, 2) ?>%</span>
-                                </div>
-                                <div class="list-group-item">
-                                    <?php $filo = sommaQuantitaPerParola($varieta_totale, 'FILOROSSO') ?>
-                                    <p>Filorosso</p><span><?= $filo ?> BT</span><span><?= number_format($filo / $bottiglie * 100, 2) ?>%</span>
-                                </div>
 
-                                <div class=" list-group-item">
-                                    <?php $pinot = sommaQuantitaPerParola($varieta_totale, 'PINOT NERO') ?>
-                                    <p>Pinot nero</p><span><?= $pinot ?> BT</span><span><?= number_format($pinot / $bottiglie * 100, 2) ?>%</span>
-                                </div>
+                            <div class="table-responsive country-table">
+                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                    <tbody>
+                                        <?php
+                                        $rossi =  analisiBottigliePerTipoAnno($anno, 'rosso');
 
+                                        //Per ogni elemento dell'array $rossi
+                                        foreach ($rossi as $varieta_vino) {
+                                            //Calcolo la quantità totale di bottiglie per ogni varietà
+                                            $quantita = $varieta_vino['quantita_prodotto'];
+                                            //Calcolo la percentuale di bottiglie per ogni varietà
+                                            $percentuale = number_format($quantita / $bottiglie * 100, 2);
+
+                                        ?>
+                                            <tr>
+                                                <td><?= strtoupper($varieta_vino['varieta'])  ?></td>
+                                                <td class="tx-right tx-medium tx-inverse"><?= $quantita ?> BT</td>
+                                                <td class="tx-right tx-medium tx-inverse"><?= $percentuale ?>%</td>
+                                            </tr>
+                                        <?php
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                     <div class=" col-md-6 col-lg-6 col-xl-6">
                         <div class="card card-dashboard-eight pb-2">
                             <h6 class="card-title text-warning">Varietà di vini BIANCHI</h6><span class="d-block mg-b-10 text-muted tx-12">Bottiglie vendute in base alla varietà</span>
-                            <div class="list-group border">
-                                <div class="list-group-item">
-                                    <?php $chard = sommaQuantitaPerParola($varieta_totale, 'CHARDONNAY') ?>
-                                    <p>Chardonay</p><span><?= $chard ?> BT</span><span><?= number_format($chard / $bottiglie * 100, 2) ?>%</span>
-                                </div>
-                                <div class="list-group-item">
-                                    <?php $friu = sommaQuantitaPerParola($varieta_totale, 'FRIULANO') ?>
-                                    <p>Friulano</p><span><?= $friu ?> BT</span><span><?= number_format($friu / $bottiglie * 100, 2) ?>%</span>
-                                </div>
-                                <div class="list-group-item">
-                                    <?php $malv = sommaQuantitaPerParola($varieta_totale, 'MALVASIA') ?>
-                                    <p>Malvasia</p><span><?= $malv ?> BT</span><span><?= number_format($malv / $bottiglie * 100, 2) ?>%</span>
-                                </div>
-                                <div class="list-group-item">
-                                    <?php $grigio = sommaQuantitaPerParola($varieta_totale, 'PINOT GRIGIO') ?>
-                                    <p>Pinot grigio</p><span><?= $grigio ?> BT</span><span><?= number_format($grigio / $bottiglie * 100, 2) ?>%</span>
-                                </div>
-                                <div class=" list-group-item">
-                                    <?php $sauv = sommaQuantitaPerParola($varieta_totale, 'SAUVIGNON') ?>
-                                    <p>Sauvignon</p><span><?= $sauv ?> BT</span><span><?= number_format($sauv / $bottiglie * 100, 2) ?>%</span>
-                                </div>
-                                <div class=" list-group-item border-bottom-0 mb-0">
-                                    <?php $ribolla = sommaQuantitaPerParola($varieta_totale, 'RIBOLLA') ?>
-                                    <p>Ribolla</p><span><?= $ribolla ?> BT</span><span><?= number_format($ribolla / $bottiglie * 100, 2) ?>%</span>
-                                </div>
+                            <div class="table-responsive country-table">
+                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                    <tbody>
+                                        <?php
+                                        $bianchi =  analisiBottigliePerTipoAnno($anno, 'bianco');
+                                        //Per ogni elemento dell'array $bianchi
+                                        foreach ($bianchi as $varieta_vino) {
+                                            //Calcolo la quantità totale di bottiglie per ogni varietà
+                                            $quantita = $varieta_vino['quantita_prodotto'];
+                                            //Calcolo la percentuale di bottiglie per ogni varietà
+                                            $percentuale = number_format($quantita / $bottiglie * 100, 2);
+                                        ?>
+                                            <tr>
+                                                <td><?= strtoupper($varieta_vino['varieta']) ?></td>
+                                                <td class="tx-right tx-medium tx-inverse"><?= $quantita ?> BT</td>
+                                                <td class="tx-right tx-medium tx-inverse"><?= $percentuale ?>%</td>
+                                            </tr>
+                                        <?php
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -206,19 +212,13 @@ $varieta_vino = 'cabernet';
                 <!-- row -->
                 <?php
                 //     $aa = analisiBottigliePerVarietaId($anno);
-
-
                 $array = array('cabernet', 'filorosso', 'pinot nero', 'chardonnay',  'friulano', 'malvasia', 'pinot grigio',  'ribolla', 'sauvignon');
                 ?>
                 <div class="row row-sm">
                     <?php
                     foreach ($array as $varieta_vino) {
                         $varieta = $varieta_totale[$varieta_vino];
-                        if (($varieta_vino == 'cabernet') || ($varieta_vino == 'filorosso') || ($varieta_vino == 'pinot nero')) {
-                            $colore = 'text-danger';
-                        } else {
-                            $colore = 'text-warning';
-                        }
+                        $colore = in_array($varieta_vino, ['cabernet', 'filorosso', 'pinot nero']) ? 'text-danger' : 'text-warning';
                     ?>
                         <div class=" col-md-4 col-lg-4 col-xl-4">
                             <div class="card">

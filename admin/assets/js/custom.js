@@ -771,12 +771,12 @@ $(document).on('change', '.prov_tipo', function(event) {
 
 
  //______Basic Data Table
- $('#clienti-datatable').DataTable({
-	language: {
-		searchPlaceholder: 'Search...',
-		sSearch: '',
-	}
-});
+//  $('#clienti-datatable').DataTable({
+// 	language: {
+// 		searchPlaceholder: 'Search...',
+// 		sSearch: '',
+// 	}
+// });
 
 /**
  * *Aggiungi e modifica agente
@@ -1094,8 +1094,6 @@ var prov1 = new BSTable("basic-edittable22",{
         var metodo_pagamento = $('#metodo_pagamento').val();
         var note = $('#note').val();
         var data_liquidazione = $('#data_liquidazione').val();
-		alert(data_liquidazione);
-        var importo_liquidazione = $('#importo_liquidazione').text();
         var fatture = [];
         $('.inclusa').each(function() {
             var id_fattura = $(this).data('id');
@@ -1110,7 +1108,6 @@ var prov1 = new BSTable("basic-edittable22",{
                 metodo_pagamento: metodo_pagamento,
                 note: note,
                 data_liquidazione: data_liquidazione,
-                importo_liquidazione: importo_liquidazione,
                 tipo: 'liquida'
             },
             success: function(response) {
@@ -1144,6 +1141,19 @@ var prov1 = new BSTable("basic-edittable22",{
 	 */
 	$(document).on('click', '.liquidazione_zona', function(event) {
 		event.preventDefault();
+		//Genero i dati tramite ajax
+		$.ajax({
+			type: "post",
+			url: "include/liquidazione.php",
+			data: {
+				tipo: 'lista_roma'
+			},
+			dataType: "html",
+			success: function(response) {
+				//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+				$('#dati_fatture_modal').html(response);
+			}
+		});
 		$('#modal-liquidazione-zona').modal('show');
 	});
 	
@@ -1206,4 +1216,55 @@ var prov1 = new BSTable("basic-edittable22",{
 
         return sommaImporti;
     }
+
+//Quando schiaccio sul bottone liquida_provv_roma Invio i dati tramite ajax
+$(document).on('click', '.liquida_provv_roma', function(e) {
+	e.preventDefault();
+	//Disabilito il bottone
+	$('.liquida_provv_roma').prop('disabled', true);
+	var metodo_pagamento = $('#metodo_pagamento').val();
+	var note = $('#note').val();
+	var data_liquidazione = $('#data_liquidazione_zona').val();
+	var fatture = [];
+	$('.inclusa_zona').each(function() {
+		var id_fattura = $(this).data('id');
+		fatture.push(id_fattura);
+	});
+	console.log(fatture);
+	$.ajax({
+		url: 'include/liquidazione.php',
+		type: 'POST',
+		data: {
+			id_fattura: fatture,
+			metodo_pagamento: metodo_pagamento,
+			note: note,
+			data_liquidazione: data_liquidazione,
+			tipo: 'liquida_zona'
+		},
+		success: function(response) {
+			var id_fattura = response;
+			//Chiudo il model
+			$('#modal-liquidazione-zona').modal('hide');
+			//Success Message
+			Swal.fire({
+				title: "Well done!",
+				text: 'Liquidazione registrata!',
+				icon: 'success',
+				showCancelButton: true,
+				confirmButtonText: 'Vedi PDF',
+				cancelButtonText: 'Esci',
+				confirmButtonColor: '#57a94f'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					//apro  una nuova scheda con il pdf
+					window.open('pdf.php?id_liquidazione=' + id_fattura, '_blank');
+				}
+			});
+		},
+		error: function(error) {
+			console.error('Errore durante la chiamata AJAX:', error);
+		}
+	});
+});
+
 });

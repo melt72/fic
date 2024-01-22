@@ -125,31 +125,15 @@ $html = '
         <table cellpadding="0" cellspacing="0">
             <tr class="top">
                 <td colspan="3"> 
-                <img src="logo.png" style="width:100%; max-width:300px;">
-                
+                <img src="logo.jpg" style="width:100%; max-width:250px;">
                             </td>
-
-                            <td colspan="3">
-                                Data: ' . date('d/m/Y', strtotime($row['data'])) . '
-                            </td>
-               
-             
+                <td colspan="3">
+                Data: ' . date('d/m/Y', strtotime($row['data'])) . '<br><br><br><br>
+                AGENTE: <br>' . $row['nome_agente'] . '</td>
             </tr>
-
-            <tr class="information">
-                <td colspan="3">  </td>
-<td colspan="3">AGENTE: <br>' . $row['nome_agente'] . '</td>
-                      
-            </tr>
-            <tr class="item">
-            <td><br></td>
-            <td></td>
-        </tr>
             <tr class="heading">
                 <td colspan="3">
-                    Metodo di pagamento :  ';
-
-
+                Metodo di pagamento :  ';
 switch ($row['pagamento']) {
     case '1':
         $html .= ' Bonifico';
@@ -196,7 +180,16 @@ $html .= '
     </td>
 </tr>';
 try {
-    $query = "SELECT *, (`imp_netto` * `provv_percent` / 100) AS provvigione FROM `fatture` WHERE `id_liquidazione`=:idfatt";
+    $query = "SELECT
+    fatture.*,
+    (`imp_netto` * `provv_percent` / 100) AS provvigione,
+    clienti.nome AS nome_cliente
+FROM
+    `fatture`
+INNER JOIN
+    clienti ON fatture.id_cfic = clienti.id_cfic
+WHERE
+    `id_liquidazione` = :idfatt;";
     $stmt = $db->prepare($query);
     $stmt->bindParam('idfatt', $id_fattura, PDO::PARAM_INT);
     $stmt->execute();
@@ -206,10 +199,8 @@ try {
         foreach ($dati as $row) {
             $totale += $row['provvigione'];
             $html .= '<tr>
-    <td colspan="2">
-        Cliente
-    </td>
-    <td>aaa</td>
+    <td colspan="2">' . $row['nome_cliente'] . '</td>
+    <td>n° ' . $row['num_f'] . ' del ' . date('d/m/Y', strtotime($row['data_f'])) . '</td>
     <td>' . arrotondaEFormatta($row['imp_netto']) . ' €</td>
     <td>' . $row['provv_percent'] . ' %</td>
     <td>' . arrotondaEFormatta($row['provvigione']) . ' €</td>

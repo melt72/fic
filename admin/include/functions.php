@@ -1615,7 +1615,24 @@ function getFattureDaLiquidareAgente($id_agente)
 {
     include(__DIR__ . '/../../include/configpdo.php');
     try {
-        $query = "SELECT *, (`imp_netto` * `provv_percent` / 100) AS provvigione, fatture.id AS id_fatt FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '') ORDER BY `data_f` DESC";
+        $query = "SELECT
+        fatture.*,
+        (`imp_netto` * `provv_percent` / 100) AS provvigione,
+        fatture.id AS id_fatt,
+        clienti.nome AS nome_cliente
+    FROM
+        `fatture`
+    INNER JOIN
+        agenti ON fatture.sigla = agenti.sigla
+    INNER JOIN
+        clienti ON fatture.id_cfic = clienti.id_cfic
+    WHERE
+        agenti.id = :id_agente
+        AND `status` = 'paid'
+        AND (id_liquidazione IS NULL OR id_liquidazione = '')
+    ORDER BY
+        `data_f` DESC;
+    ";
         $stmt = $db->prepare($query);
         $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
         $stmt->execute();
@@ -1633,6 +1650,44 @@ function getFattureDaLiquidareZona($id_zona)
         $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//funzione Che calcola il totale della liquidazione di un agente in base al numero delle fatture
+function importoliquidzione($id_fattura)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT (`imp_netto` * `provv_percent` / 100) AS totale FROM `fatture`  WHERE id=:id_fattura";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_fattura', $id_fattura, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row['totale'] == null) {
+            return 0;
+        } else {
+            return $row['totale'];
+        }
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+function importoliquidzione_roma($id_fattura)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT (`imp_netto` * `provv_percent` / 100) AS totale FROM `fatture`  WHERE id=:id_fattura";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_fattura', $id_fattura, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row['totale'] == null) {
+            return 0;
+        } else {
+            return $row['totale'];
+        }
     } catch (PDOException $e) {
         echo "Error : " . $e->getMessage();
     }
@@ -1872,13 +1927,42 @@ function get_fatture_roma($year = 'all')
             $maxYearResult = $stmtMaxYear->fetch(PDO::FETCH_ASSOC);
             $maxYear = $maxYearResult['max_year'];
 
-            $query = "SELECT fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`, nome_zona FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic INNER JOIN zone_roma ON agenti_roma.id_zona=zone_roma.id_zona WHERE fatture.sigla='RSC' AND YEAR(data_f) = :maxYear";
+            $query = "SELECT fatture.id AS id_fatt,nome, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`, nome_zona, zone_roma.id_zona FROM `fatture` INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic INNER JOIN agenti_roma ON clienti.id_cfic=agenti_roma.id_cfic INNER JOIN zone_roma ON agenti_roma.id_zona=zone_roma.id_zona WHERE fatture.sigla='RSC' AND YEAR(data_f) = :maxYear";
             $stmt = $db->prepare($query);
             $stmt->bindParam(':maxYear', $maxYear, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll();
             break;
 
+        case 'liquidazione':
+            $query = "SELECT 
+                fatture.id AS id_fatt,
+                nome,
+                num_f,
+                imp_netto,
+                imp_iva,
+                imp_tot,
+                data_f,
+                data_scadenza,
+                provv_percent,
+                id_liquidazione,
+                nome_zona,
+                zone_roma.id_zona
+            FROM 
+                fatture
+            INNER JOIN 
+                clienti ON fatture.id_cfic = clienti.id_cfic
+            INNER JOIN 
+                agenti_roma ON clienti.id_cfic = agenti_roma.id_cfic
+            INNER JOIN 
+                zone_roma ON agenti_roma.id_zona = zone_roma.id_zona
+            WHERE 
+                fatture.sigla = 'RSC' AND status='paid' AND id_liquidazione IS NULL
+            ";
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll();
+            break;
         default:
             $query = "SELECT fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione` FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = :year ORDER BY `data_f` DESC";
             $stmt = $db->prepare($query);
@@ -1918,6 +2002,35 @@ function get_fatture_roma($year = 'all')
 //             break;
 //     }
 // }
+
+//Funzione per impostare una determinata percentuale per una fattura a cui manca
+function setPercentualeFattura($id_fattura, $id_zona)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        //Ricavo la percentuale della zona
+        $query = "SELECT provv FROM `zone_roma` WHERE id_zona=:id_zona";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_zona', $id_zona, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $provv = $row['provv'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+
+    try {
+        //Imposto la percentuale della fattura
+        $query = "UPDATE `fatture` SET `provv_percent`=:provv WHERE `id`=:id_fattura";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':provv', $provv, PDO::PARAM_INT);
+        $stmt->bindParam(':id_fattura', $id_fattura, PDO::PARAM_INT);
+        $stmt->execute();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+    echo $provv;
+}
 
 /**
  * *Anni disponibili per Roma
@@ -2515,7 +2628,7 @@ function analisiBottigliePerVarietaId($anno)
 {
     include(__DIR__ . '/../../include/configpdo.php');
 
-    $array = array('cabernet', 'chardonnay', 'filorosso', 'friulano', 'malvasia', 'pinot grigio', 'pinot nero', 'ribolla', 'sauvignon', 'castadiva');
+    $array = array('cabernet', 'chardonnay', 'filorosso', 'friulano', 'malvasia', 'pinot grigio', 'pinot nero', 'ribolla', 'sauvignon');
     $resultArray = array();
 
     foreach ($array as $varieta) {
@@ -2526,24 +2639,20 @@ function analisiBottigliePerVarietaId($anno)
             FROM
                 fatture f
                 INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
-                JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+                INNER  JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
             WHERE
-                YEAR(f.data_f) = :anno AND lp.nome_prodotto LIKE :varieta
+                YEAR(f.data_f) = :anno AND lp.varieta= :varieta
             GROUP BY
-                lp.nome_prodotto
-                ORDER BY
-    lp.nome_prodotto";
+                lp.nome_prodotto";
             $stmt = $db->prepare($query);
             $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
-            $varietaLike = '%' . $varieta . '%'; // Aggiungi il carattere jolly % prima e dopo la varietà
-            $stmt->bindParam(':varieta', $varietaLike, PDO::PARAM_STR);
+            $stmt->bindParam(':varieta', $varieta, PDO::PARAM_STR);
             $stmt->execute();
 
             $prodottiVarieta = array();
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $nomeProdotto = $row['nome_prodotto'];
                 $quantita = $row['quantita_prodotto'];
-
                 $prodottiVarieta[] = array('nome' => $nomeProdotto, 'quantita' => $quantita);
             }
 
@@ -2576,4 +2685,584 @@ function sommaQuantitaPerParola($varietà, $parolaChiave)
     }
 
     return $somma;
+}
+
+/**
+ * *Funzione Per gli agenti grafici e statistiche.
+ */
+function analisiImponibileAgenteDiretto($anno)
+{
+    $tot = analisiImponibileNetto($anno); //imponibile netto totale
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+            CASE
+                WHEN a.id IS NOT NULL THEN 'Agente'
+                ELSE 'Cliente'
+            END AS tipo,
+            SUM(f.imp_netto) AS totale_imponibile,
+            (SUM(f.imp_netto) / $tot) * 100 AS percentuale
+        FROM
+            fatture f
+        LEFT JOIN
+            agenti a ON f.sigla = a.sigla
+        WHERE
+            YEAR(f.data_f) = :anno
+        GROUP BY
+            tipo
+        ORDER BY
+            totale_imponibile DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+//Funzione per determinare L'imponibile derivante da agenti.
+function analisiImponibilePerAgente($anno)
+{
+    $tot = analisiImponibileNetto($anno); // imponibile netto totale
+
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+            a.nome_agente AS nome_agente,
+            SUM(f.imp_netto) AS imponibile,
+            (SUM(f.imp_netto) / $tot) * 100 AS percentuale
+        FROM
+            fatture f
+        JOIN
+            agenti a ON f.sigla = a.sigla
+        WHERE
+            YEAR(f.data_f) = :anno
+        GROUP BY
+            a.id
+        ORDER BY
+            imponibile DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare i dati cliente Partendo dall'id_cfic
+function getClienteById($id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `clienti` WHERE id_cfic=:id_cfic";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare imponibile netto per ciascun cliente In base al suo id_cfic
+function analisiImponibilePerCliente($anno, $id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        c.nome AS nome_cliente,
+        SUM(f.imp_netto) AS imponibile
+    FROM
+        fatture f
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic
+    WHERE
+        YEAR(f.data_f) = :anno AND c.id_cfic = :id_cfic
+    GROUP BY
+        c.id_cfic
+    ORDER BY
+        imponibile DESC";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare l'imponibile netto Totale per ciascun cliente
+function imponibilePerClienteTotale($id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        SUM(f.imp_netto) AS imponibile
+    FROM
+        fatture f
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic
+    WHERE
+       c.id_cfic = :id_cfic";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totale = $row['imponibile'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+
+    //Quello che è stato pagato paid
+    try {
+        $query = "SELECT
+        SUM(f.imp_netto) AS imponibile
+    FROM
+        
+        fatture f
+    JOIN
+        clienti c ON f.id_cfic = c.id_cfic
+    WHERE
+       c.id_cfic = :id_cfic AND f.status='paid'";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totale_pagato = $row['imponibile'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+    //Quello che è stato pagato not_paid
+    try {
+        $query = "SELECT
+        SUM(f.imp_netto) AS imponibile
+    FROM
+            
+            fatture f
+        JOIN
+            clienti c ON f.id_cfic = c.id_cfic
+        WHERE
+        c.id_cfic = :id_cfic AND f.status='not_paid'";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totale_non_pagato = $row['imponibile'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+    //Quello che è stato pagato not_paid e scaduto
+    try {
+        $query = "SELECT
+        SUM(f.imp_netto) AS imponibile
+    FROM 
+            fatture f
+        JOIN
+            clienti c ON f.id_cfic = c.id_cfic
+        WHERE
+        c.id_cfic = :id_cfic AND f.status='not_paid' AND f.data_scadenza < CURDATE()";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totale_non_pagato_scaduto = $row['imponibile'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+    $array = array(
+        'totale' => arrotondaEFormatta($totale),
+        'totale_pagato' => arrotondaEFormatta($totale_pagato),
+        'totale_non_pagato' => arrotondaEFormatta($totale_non_pagato),
+        'totale_non_pagato_scaduto' => arrotondaEFormatta($totale_non_pagato_scaduto)
+    );
+    return $array;
+}
+//Funziona per determinare gli anni in cui ci sono dati per un determinato cliente .
+function anniConFatturePerCliente($id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    try {
+        $query = "SELECT DISTINCT YEAR(data_f) AS anno
+                  FROM fatture
+                  WHERE id_cfic = :id_cfic";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $anni = array();
+        foreach ($result as $row) {
+            $anni[] = $row['anno'];
+        }
+
+        return $anni;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+//Funziona per determinare l'imponibile netto Totale Per un cliente in un determinato anno per ciascuno dei 12 mesi .
+function imponibilePerClienteMese($anno, $id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    try {
+        $query = "SELECT
+            MONTH(data_f) AS mese,
+            SUM(imp_netto) AS imponibile
+        FROM
+            fatture
+        JOIN
+            clienti ON fatture.id_cfic = clienti.id_cfic
+        WHERE
+            YEAR(data_f) = :anno AND clienti.id_cfic = :id_cfic
+        GROUP BY
+            mese";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_INT);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Inizializza l'array con valori di default a 0 per tutti i mesi
+        $array = array_fill(1, 12, '0');
+
+        // Aggiorna i valori degli imponibili effettivamente presenti
+        foreach ($result as $row) {
+            $array[$row['mese']] = $row['imponibile'];
+        }
+
+        return $array;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+//
+
+function dettagliOrdiniPerAnno($id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    try {
+        $anni = anniConFatturePerCliente($id_cfic);
+        $dettagli_ordini = array();
+
+        foreach ($anni as $anno) {
+            // Numero totale di ordini effettuati
+            $query_totale_ordini = "SELECT COUNT(*) AS totale_ordini, SUM(imp_tot) AS totale_imponibile FROM fatture WHERE id_cfic = :id_cfic AND YEAR(data_f) = :anno";
+            $stmt_totale_ordini = $db->prepare($query_totale_ordini);
+            $stmt_totale_ordini->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+            $stmt_totale_ordini->bindParam(':anno', $anno, PDO::PARAM_INT);
+            $stmt_totale_ordini->execute();
+            $result_totale_ordini = $stmt_totale_ordini->fetch(PDO::FETCH_ASSOC);
+            $totale_ordini = $result_totale_ordini['totale_ordini'];
+            $totale_imponibile = $result_totale_ordini['totale_imponibile'];
+
+            // // Numero di ordini scaduti
+            // $query_ordini_scaduti = "SELECT COUNT(*) AS ordini_scaduti FROM fatture WHERE id_cfic = :id_cfic AND YEAR(data_f) = :anno AND data_scadenza < CURRENT_DATE";
+            // $stmt_ordini_scaduti = $db->prepare($query_ordini_scaduti);
+            // $stmt_ordini_scaduti->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+            // $stmt_ordini_scaduti->bindParam(':anno', $anno, PDO::PARAM_INT);
+            // $stmt_ordini_scaduti->execute();
+            // $result_ordini_scaduti = $stmt_ordini_scaduti->fetch(PDO::FETCH_ASSOC);
+            // $ordini_scaduti = $result_ordini_scaduti['ordini_scaduti'];
+
+            // Aggiungi i dettagli per l'anno corrente all'array
+            $dettagli_ordini[] = array(
+                'anno' => $anno,
+                'totale_imponibile' => $totale_imponibile,
+                'totale_ordini' => $totale_ordini,
+                'media_imponibile' => round($totale_imponibile / $totale_ordini)
+                // ,
+                // 'ordini_scaduti' => $ordini_scaduti,
+            );
+        }
+
+        return $dettagli_ordini;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare il totale delle bottiglie di una determinata varietà in un determinato anno
+function analisiBottigliePerVarietaAnno($anno, $varieta)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        lp.nome_prodotto AS nome_prodotto,
+        SUM(p.qta) AS quantita_prodotto
+    FROM
+        fatture f
+        INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+        INNER JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+    WHERE
+        YEAR(f.data_f) = :anno AND lp.varieta= :varieta
+        GROUP BY
+        lp.nome_prodotto";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->bindParam(':varieta', $varieta, PDO::PARAM_STR);
+        $stmt->execute();
+        // Recupera i risultati come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci i risultati
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare il totale delle bottiglie di una determinata tipo (bianchi o rossi) in un determinato anno
+function analisiBottigliePerTipoAnno($anno, $tipo)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+         lp.varieta,
+        SUM(p.qta) AS quantita_prodotto
+    FROM
+        fatture f
+        INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+        JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+    WHERE
+        YEAR(f.data_f) = :anno AND lp.tipo= :tipo
+        GROUP BY
+            lp.varieta";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->bindParam(':tipo', $tipo, PDO::PARAM_STR);
+        $stmt->execute();
+        // Recupera i risultati come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci i risultati
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare il totale delle bottiglie di una determinata varietà in un determinato cliente
+function analisiBottigliePerVarietaCliente($id_cfic, $varieta)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        SUM(p.qta) AS quantita_prodotto
+    FROM
+        fatture f
+        INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+        JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+    WHERE
+        f.id_cfic = :id_cfic AND lp.varieta= :varieta";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->bindParam(':varieta', $varieta, PDO::PARAM_STR);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $qta_cliente = $row['quantita_prodotto'];
+        if ($qta_cliente === null) {
+            $qta_cliente = '0';
+        }
+        return $qta_cliente;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funziona per determinare il totale delle bottiglie di una determinata tipo (bianchi o rossi) in un determinato cliente
+function analisiBottigliePerTipoCliente($id_cfic, $tipo)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+            lp.varieta,
+            SUM(p.qta) AS quantita_prodotto
+        FROM
+            fatture f
+            INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+            INNER JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+            INNER JOIN clienti c ON f.id_cfic = c.id_cfic
+        WHERE
+            c.id_cfic = :id_cfic AND lp.tipo = :tipo
+        GROUP BY
+            lp.varieta";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->bindParam(':tipo', $tipo, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera i risultati come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci i risultati
+        return $result;
+    } catch (PDOException $e) {
+        // Gestisci gli errori in modo appropriato, ad esempio, loggandoli o restituendo un messaggio di errore
+        echo "Error: " . $e->getMessage();
+        return false; // Ritorna un valore significativo in caso di errore
+    }
+}
+
+//Funziona per determinare il totale delle bottiglie di Un determinato cliente
+function analisiBottigliePerCliente($id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        SUM(p.qta) AS quantita_prodotto
+    FROM
+        fatture f
+        INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+        JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+    WHERE
+        f.id_cfic = :id_cfic";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $qta_cliente = $row['quantita_prodotto'];
+        if ($qta_cliente === null) {
+            $qta_cliente = '0';
+        }
+        return $qta_cliente;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+function Importanza_cliente($id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    try {
+        // Ottieni la data corrente
+        $data_corrente = date('Y-m-d');
+
+        // Calcola la data di inizio 12 mesi fa
+        $data_inizio_12_mesi_fa = date('Y-m-d', strtotime('-12 months', strtotime($data_corrente)));
+
+        // Query per ottenere il totale imponibile degli ultimi 12 mesi
+        $query = "SELECT
+                    SUM(imp_netto) AS totale_imponibile
+                  FROM
+                    fatture
+                  WHERE
+                data_f BETWEEN :data_inizio_12_mesi_fa AND :data_corrente";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':data_inizio_12_mesi_fa', $data_inizio_12_mesi_fa, PDO::PARAM_STR);
+        $stmt->bindParam(':data_corrente', $data_corrente, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totale_imponibile = $result['totale_imponibile'];
+
+        // Ora puoi calcolare la percentuale rispetto al totale degli ordini (puoi ottenere il totale degli ordini come preferisci)
+        // Ad esempio, se hai una funzione totaleOrdini() che restituisce il totale degli ordini per il cliente, puoi fare così:
+        $query = "SELECT
+        SUM(imp_netto) AS totale_imponibile
+      FROM
+        fatture
+      WHERE
+    id_cfic = :id_cfic AND
+    data_f BETWEEN :data_inizio_12_mesi_fa AND :data_corrente";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->bindParam(':data_inizio_12_mesi_fa', $data_inizio_12_mesi_fa, PDO::PARAM_STR);
+        $stmt->bindParam(':data_corrente', $data_corrente, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totale_ordini = $result['totale_imponibile'];
+        // Calcola la percentuale
+        echo round(($totale_ordini / $totale_imponibile) * 100);
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+        return false; // Ritorna un valore significativo in caso di errore
+    }
+}
+
+//Funziona per determinare l'affidabilità del cliente
+function Affidabilita_cliente($id_cfic)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+
+    try {
+        // Ottieni la data corrente
+        $data_corrente = date('Y-m-d');
+
+        //Seleziono tutte le fatture del cliente
+        $query = "SELECT
+                    *
+                  FROM
+                    fatture
+                  WHERE
+                id_cfic = :id_cfic";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $affidabilita = 0;
+        $n = 1; //Contatore per il numero di fatture
+        foreach ($result as $row) {
+            $data_fattura = $row['data_f'];
+            $data_scadenza = $row['data_scadenza'];
+            $status = $row['status'];
+            if ($status == 'not_paid' && $data_scadenza < $data_corrente) {
+                //Calcola il numero di giorni tra la data scadenza e la data corrente
+                $data1 = new DateTime($data_scadenza);
+                $data2 = new DateTime($data_corrente);
+                $interval = $data1->diff($data2);
+                $giorni = $interval->format('%a');
+                if ($giorni > 30) {
+                    $giorni = 30;
+                }
+                //Togli uno per ogni giorno di ritardo
+                $affidabilita += 100 - $giorni;
+            } else { //Se non è scaduto o è stato pagato
+
+                //Se è stato pagato calcola la differenza tra la data di scadenza e la data di pagamento .
+                if ($status == 'paid') {
+                    $data_pagamento = $row['data_pagamento'];
+                    $data1 = new DateTime($data_scadenza);
+                    $data2 = new DateTime($data_pagamento);
+                    $interval = $data1->diff($data2);
+                    $giorni = $interval->format('%a');
+                    if ($giorni > 30) {
+                        $giorni = 20;
+                    }
+                    //Togli uno per ogni giorno di ritardo
+                    $affidabilita += 100 - $giorni;
+                } else {
+                    $affidabilita += 100;
+                }
+            }
+            $n++;
+        }
+        $affidabilita = $affidabilita / $n;
+        echo round($affidabilita);
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+        return false; // Ritorna un valore significativo in caso di errore
+    }
 }

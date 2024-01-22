@@ -38,7 +38,6 @@ include 'partials/header.php';
                     <div class="left-content">
                         <div>
                             <h2 class="main-content-title tx-24 mg-b-1 mg-b-lg-1">Provvigione Roma</h2>
-
                         </div>
                     </div>
                     <div class="main-dashboard-header-right">
@@ -85,38 +84,7 @@ include 'partials/header.php';
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <!-- <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
-                                                            <div class="card">
-                                                                <div class="card-body">
-                                                                    <div class="card-widget">
-                                                                        <h6 class="mb-2">Provvigione Totale</h6>
-                                                                        <h2 class="text-end"><i class="icon-size mdi mdi-poll-box float-start text-warning text-warning-shadow">
-                                                                                <span><small>Liquidata</small></span>
-                                                                            </i><span><?= getProvvigioneAgente($id_agente, 'totale_liquidata') ?> €</span>
-                                                                        </h2>
-                                                                        <h2 class="text-end"><i class="icon-size mdi mdi-poll-box float-start text-primary text-warning-shadow">
-                                                                                <span><small>Da Liquidare</small></span>
-                                                                            </i><span><?= getProvvigioneAgente($id_agente, 'totale_da_liquidare') ?> €</span>
-                                                                        </h2>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
-                                                            <div class="card">
-                                                                <div class="card-body">
-                                                                    <div class="card-widget">
-                                                                        <h6 class="mb-2">Fatturato Imponibile</h6>
-                                                                        <h2 class="text-end"><i class="icon-size mdi mdi-poll-box   float-start text-warning text-warning-shadow"><span><small>Incassato</small></span></i><span><?= getFatturatoNettoAgente($id_agente, 'incassato') ?> €</span>
-                                                                        </h2>
-                                                                        <h2 class="text-end"><i class="icon-size mdi mdi-poll-box float-start text-primary text-warning-shadow">
-                                                                                <span><small>Da Incassare</small></span>
-                                                                            </i><span><?= getFatturatoNettoAgente($id_agente, 'da_incassare') ?> €</span>
-                                                                        </h2>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div> -->
+
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
@@ -129,6 +97,7 @@ include 'partials/header.php';
                                                                         <?php
                                                                         //prendo gli anni dei prodotti di marketing
                                                                         $anni =  getAnniFattureRoma();
+
                                                                         if (!empty($anni)) {
                                                                             //conto quanti anni sono
                                                                             $n_anni = count($anni);
@@ -168,9 +137,10 @@ include 'partials/header.php';
                                                                             <tbody id="dati_fatture">
                                                                                 <?php
                                                                                 foreach ($fatture as $fattura) {
+                                                                                    $tipo_di_provvigione = $fattura['provv_percent'];
                                                                                 ?>
                                                                                     <tr>
-                                                                                        <td>Bella</td>
+                                                                                        <td><?= $fattura['nome'] ?></td>
                                                                                         <td><?= $fattura['num_f'] ?> del <br><?= date('d/m/Y', strtotime($fattura['data_f'])) ?></td>
                                                                                         <td><?= arrotondaEFormatta($fattura['imp_tot']) ?> €<br>
                                                                                             (IVA: <?= arrotondaEFormatta($fattura['imp_iva'])  ?> €)
@@ -180,16 +150,21 @@ include 'partials/header.php';
                                                                                             echo $fattura['nome_zona'] . '<br>';
                                                                                             $provvigione_totale = $fattura['imp_netto'] * 16 / 100;
                                                                                             if ($fattura['id_liquidazione'] != '') : ?>
-                                                                                                <?= $fattura['provv_percent'] ?> %
+                                                                                                <?= $tipo_di_provvigione ?> %
                                                                                                 <?php else :
+                                                                                                if (($tipo_di_provvigione == 1) || ($tipo_di_provvigione == 2) || ($tipo_di_provvigione == 3)) {
+                                                                                                } else {
+                                                                                                    //Imposto Il tipo di provvigione
+                                                                                                    $tipo_di_provvigione =   setPercentualeFattura($fattura['id_fatt'], $fattura['id_zona']);
+                                                                                                }
                                                                                                 //se non è stata liquidata la provvigione
                                                                                                 //mostro il tipo di provvigione
-                                                                                                if ($fattura['provv_percent'] == 1) { ?>
+                                                                                                if ($tipo_di_provvigione == 1) { ?>
                                                                                                     <a href="#" data-pk="<?= $fattura['id_fatt'] ?>">50% - 50%</a>
                                                                                                 <?php
                                                                                                     $prov_agente = arrotondaEFormatta($provvigione_totale / 2) . ' €';
                                                                                                     $prov_agenzia = arrotondaEFormatta($provvigione_totale / 2) . ' €';
-                                                                                                } elseif ($fattura['provv_percent'] == 2) { ?>
+                                                                                                } elseif ($tipo_di_provvigione == 2) { ?>
                                                                                                     <a href="#" data-pk="<?= $fattura['id_fatt'] ?>">100% Agenzia</a>
                                                                                                 <?php
                                                                                                     $prov_agente = '';
@@ -220,7 +195,7 @@ include 'partials/header.php';
                                                         <div class="card-header d-flex justify-content-between align-items-center">
                                                             <h3 class="card-title">Liquidazioni provvigione</h3>
                                                             <div>
-                                                                <button class="btn btn-primary btn-sm liquidazione_zona"><span class="fe fe-plus"> Nuova Liquidazione</span></button>
+                                                                <a href="roma-liquidazione.php" class="btn btn-primary btn-sm"><span class="fe fe-plus"> Nuova Liquidazione</span></a>
                                                             </div>
                                                         </div>
                                                         <div class="card-body">

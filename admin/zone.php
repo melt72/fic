@@ -37,29 +37,14 @@ include 'partials/header.php';
                 <div class="breadcrumb-header justify-content-between">
                     <div class="left-content">
                         <div>
-                            <h2 class="main-content-title tx-24 mg-b-1 mg-b-lg-1">Hi, welcome back!</h2>
-                            <p class="mg-b-0">Sales monitoring dashboard template.</p>
+                            <h2 class="main-content-title tx-24 mg-b-1 mg-b-lg-1">Zone Roma</h2>
                         </div>
                     </div>
                     <div class="main-dashboard-header-right">
-                        <div>
-                            <label class="tx-13">Customer Ratings</label>
-                            <div class="main-star">
-                                <i class="typcn typcn-star active"></i> <i class="typcn typcn-star active"></i> <i class="typcn typcn-star active"></i> <i class="typcn typcn-star active"></i> <i class="typcn typcn-star"></i> <span>(14,873)</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="tx-13">Online Sales</label>
-                            <h5>563,275</h5>
-                        </div>
-                        <div>
-                            <label class="tx-13">Offline Sales</label>
-                            <h5>783,675</h5>
-                        </div>
-                    </div>
-                </div>
-                <!-- breadcrumb -->
 
+                    </div>
+                    <!-- breadcrumb -->
+                </div>
                 <!-- row -->
                 <div class="row row-sm">
                     <div class="col-md-12">
@@ -67,7 +52,8 @@ include 'partials/header.php';
                             <div class="card-header  d-flex justify-content-between align-items-center">
                                 <h3 class="card-title">Definizione delle zone</h3>
                                 <div>
-                                    <button class="btn btn-primary btn-sm addzona"><span class="fe fe-plus"> </span></button>
+                                    <!-- <button class="btn btn-primary btn-sm addzona"><span class="fe fe-plus"> </span></button> -->
+                                    <div><a href="zone_associa.php" class="btn btn-primary">Associa Cliente</a></div>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -108,7 +94,6 @@ include 'partials/header.php';
                                                                         <label for="" class="form-label"> Ripartizione predefinita:</label>
                                                                         <?php
                                                                         if ($zona['provv'] != 3) {
-
                                                                         ?>
                                                                             <select class="form-select form-select prov_tipo" name="prov_tipo" id="prov_tipo" data-id="<?= $zona['id_zona'] ?>">
                                                                                 <option selected>Select one</option>
@@ -122,7 +107,7 @@ include 'partials/header.php';
                                                                         ?>
                                                                     </div>
 
-                                                                    <div><button class="btn btn-primary associazona" data-id="<?= $zona['id_zona']  ?>">Associa Cliente</button></div>
+                                                                    <!-- <div><button class="btn btn-primary associazona" data-id="<?= $zona['id_zona']  ?>">Associa Cliente</button></div> -->
                                                                 </div>
                                                             </div>
                                                             <div class="row justify-content-center align-items-center g-2">
@@ -134,20 +119,17 @@ include 'partials/header.php';
                                                                             <thead>
                                                                                 <tr>
                                                                                     <th>ID</th>
-                                                                                    <th>Name</th>
-                                                                                    <th>Position</th>
-                                                                                    <th>Salary</th>
+                                                                                    <th>Nome</th>
+                                                                                    <th>Città</th>
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
                                                                                 <?php
                                                                                 foreach ($cl_zone as $cl) { ?>
-
                                                                                     <tr>
                                                                                         <th scope="row"><?= $cl['id_cfic'] ?></th>
                                                                                         <td><?= $cl['nome'] ?></td>
-                                                                                        <td></td>
-                                                                                        <td></td>
+                                                                                        <td><?= $cl['citta'] ?></td>
                                                                                     </tr>
                                                                                 <?php
                                                                                 } ?>

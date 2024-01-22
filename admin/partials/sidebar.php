@@ -62,7 +62,8 @@
                                             <li><a class="slide-item" href="analisi.php">Analisi Imponibile</a></li>
                                             <li><a class="slide-item" href="analisi-geo.php">Analisi Geografica</a></li>
                                             <li><a class="slide-item" href="analisi-vino.php">Analisi Vino</a></li>
-
+                                            <li><a class="slide-item" href="analisi-agenti.php">Analisi Agenti</a></li>
+                                            <li><a class="slide-item" href="analisi-clienti.php">Analisi Clienti</a></li>
                                         </ul>
                                     </div>
                                 </div>
