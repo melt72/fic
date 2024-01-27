@@ -357,26 +357,31 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                 </div>
                             </div><!-- card-header -->
                             <div class="card-body p-0">
-                                <?php
-                                $province = analisiImponibilePerProvincia($anno);
-                                foreach ($province as $riga) :
-                                ?>
-                                    <div class="browser-stats">
-                                        <div class="d-flex align-items-center item  border-bottom">
-                                            <div class="d-flex">
-                                                <div class="">
-                                                    <h6 class=""><?= $riga['nome_provincia']; ?></h6>
-                                                </div>
-                                            </div>
+                                <div class="table-responsive country-table">
+                                    <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                        <thead>
+                                            <tr>
+                                                <th class="wd-lg-50p">Provincia</th>
+                                                <th class="wd-lg-25p tx-right">Imponibile</th>
 
-                                            <div class="ms-auto my-auto">
-                                                <div class="d-flex">
-                                                    <span class="me-4 my-auto">€ <?= arrotondaEFormatta($riga['imponibile']); ?></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $province = analisiImponibilePerProvincia($anno);
+                                            foreach ($province as $riga) :
+                                            ?>
+                                                <tr>
+                                                    <td><?= $riga['nome_provincia']; ?></td>
+                                                    <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
+                                                    <td class="tx-right tx-medium tx-inverse"><button class="btn btn-info btn-icon me-2 btn-b vedi-provincia" data-pv="<?= $riga['pv'] ?>"><i class="fe fe-eye"></i></button></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -396,6 +401,7 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                             <th class="wd-lg-50p">Nome</th>
                                             <th class="wd-lg-25p tx-right">Imponibile</th>
                                             <th class="wd-lg-25p tx-right">Prov/Stato</th>
+                                            <th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -407,6 +413,7 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                                 <td><?= $riga['nome_cliente']; ?></td>
                                                 <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
                                                 <td class="tx-right tx-medium tx-inverse"><?= $riga['provincia']; ?></td>
+                                                <td class="tx-right tx-medium tx-inverse"><a href="analisi-clienti.php?c=<?= $riga['id_cfic'] ?>" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>
                                             </tr>
                                         <?php endforeach; ?>
 
@@ -467,4 +474,6 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
         data: datapie,
         options: optionpie
     });
+
+    var anno = '<?= $anno ?>';
 </script>

@@ -26,7 +26,7 @@ function PasswordCasuale($lunghezza = 8, $tipo = 'all')
 //Funzione per prelevare i prodotti da fatture in cloud .
 function get_products($page = 1)
 {
-    include 'config-api.php';
+    include 'config-api2.php';
     //array dei prodotti
     $prodotti = array();
     try {
@@ -69,7 +69,7 @@ function get_products($page = 1)
 //funzione per prelevare i clienti da fatture in cloud
 function get_clients($page = 1)
 {
-    include 'config-api.php';
+    include 'config-api2.php';
     //array dei nomi dei clienti
     $clienti = array();
     try {
@@ -117,7 +117,7 @@ function get_clients($page = 1)
 //funzione per prelevare le fatture da fatture in cloud
 function get_fatture($page = 1, $data_inizio = '0')
 {
-    include 'config-api.php';
+    include 'config-api2.php';
     //array delle fatture
     $fatture = array();
     try {
@@ -392,4 +392,86 @@ function determinaVarietaVino($nome_stringa)
 
     // Se nessuna corrispondenza è stata trovata
     return "Varietà non trovata";
+}
+
+//Funzione che trova la lista di tutte le fatture non pagate
+function fatture_non_pagate()
+{
+    include 'include/configpdo.php';
+    $sql = "SELECT id_ffic FROM fatture WHERE status = 'not_paid'";
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $result;
+}
+
+//Funzione che Controlla lo status della fattura in fatture in cloud
+function check_status()
+{
+    include 'include/configpdo.php';
+    include 'config-api2.php';
+    //array delle fatture
+    $fatture_non_pagate = fatture_non_pagate();
+    // Retrieve the first company id
+    $companies = $userApi->listUserCompanies();
+    // se il tipo è all allora prelevo tutte le fatture
+    $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
+    $field = 'status,paid_date';
+    foreach ($fatture_non_pagate as $fattura) {
+        $document_id = $fattura['id_ffic']; //id fattura
+        try {
+            $issuedEInvoices = $issuedEInvoicesApi->getIssuedDocument($firstCompanyId, $document_id, $field, 'detailed');
+
+            //Prelevo i dati della fattura
+            $status = $issuedEInvoices->getData()->getPaymentsList()[0]->getStatus(); //stato della fattura
+            $data_pag = $issuedEInvoices->getData()->getPaymentsList()[0]->getPaidDate(); //data di pagamento della fattura
+            if ($status == 'paid') {
+                $data_pag = $data_pag->format('Y-m-d');
+                $sql = "UPDATE fatture SET status = :status, data_pagamento=:datapagamento WHERE id_ffic = :id";
+                $stmt = $db->prepare($sql);
+                $stmt->bindParam('id', $document_id, PDO::PARAM_INT);
+                $stmt->bindParam('status', $status, PDO::PARAM_STR);
+                $stmt->bindParam('datapagamento', $data_pag, PDO::PARAM_STR);
+                $stmt->execute();
+            }
+        } catch (Exception $e) {
+            echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;
+        }
+    }
+}
+
+function saveAccessToken($accessToken, $tipo)
+{
+    include 'include/configpdo.php';
+    // Salva il token di accesso nel database nella tabella config
+
+    try {
+        $query = "UPDATE `config` SET valore_config=:acctoken WHERE `parametro_config`= :tipo";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('acctoken', $accessToken, PDO::PARAM_STR);
+        $stmt->bindParam('tipo', $tipo, PDO::PARAM_STR);
+        $stmt->execute();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+function getToken($tipo)
+{
+    // Implementa la logica per recuperare il refresh token dal tuo sistema
+    // Ad esempio, puoi recuperarlo dal database o da un file sicuro
+    // Assicurati di proteggere questo dato sensibile
+
+    include 'include/configpdo.php';
+    try {
+        $query = "SELECT `valore_config` FROM `config` WHERE `parametro_config`=:tipo";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('tipo', $tipo, PDO::PARAM_STR);
+        $stmt->execute();
+        $row   = $stmt->fetch(PDO::FETCH_ASSOC);
+        $token = $row['valore_config'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+    return $token;
 }

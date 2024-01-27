@@ -1267,4 +1267,74 @@ $(document).on('click', '.liquida_provv_roma', function(e) {
 	});
 });
 
+//Quando schiaccio sul bottone Un classe vedi scaduti Apro il model generico
+$(document).on('click', '.vedi_scaduti', function(event) {
+	event.preventDefault();
+	//Genero i dati tramite ajax
+	$.ajax({
+		type: "post",
+		url: "include/imponibile.php",
+		data: {
+			tipo: 'lista_scaduti',
+			anno: anno,
+		},
+		dataType: "html",
+		success: function(response) {
+			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+			//Cambio il titolo del model
+			$('#modal-generico .modal-title').html('Fatture scadute');
+			$('#modal-generico .modal-body').html(response);
+		}
+	});
+	$('#modal-generico').modal('show');
+});
+
+//Quando schiaccio sul bottone Un classe vedi_provincia Apro il model generico
+$(document).on('click', '.vedi-provincia', function(event) {
+	event.preventDefault();
+	//Leggo il valore data PV
+	var pv = $(this).attr("data-pv");
+	//Genero i dati tramite ajax
+	$.ajax({
+		type: "post",
+		url: "include/imponibile.php",
+		data: {
+			tipo: 'vedi_provincia',
+			pv: pv,
+			anno: anno,
+		},
+		dataType: "html",
+		success: function(response) {
+			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+			//Cambio il titolo del model
+			$('#modal-generico .modal-title').html('Clienti provincia ' + pv);
+			$('#modal-generico .modal-body').html(response);
+		}
+	});
+	$('#modal-generico').modal('show');
+});
+
+//Quando schiaccio sul bottone Un classe vedi_scaduti_cliente Apro il model generico
+$(document).on('click', '.vedi_scaduti_cliente', function(event) {
+	event.preventDefault();
+	//Leggo il valore data PV
+	var id_cliente = $(this).attr("data-id");
+	//Genero i dati tramite ajax
+	$.ajax({
+		type: "post",
+		url: "include/imponibile.php",
+		data: {
+			tipo: 'lista_scaduti_cliente',
+			cliente: id_cliente
+		},
+		dataType: "html",
+		success: function(response) {
+			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+			//Cambio il titolo del model
+			$('#modal-generico .modal-title').html('Fatture scadute cliente');
+			$('#modal-generico .modal-body').html(response);
+		}
+	});
+	$('#modal-generico').modal('show');
+});
 });

@@ -1,5 +1,7 @@
 <?php
 require __DIR__ . '/admin/assets/vendor/autoload.php';
+include 'include/configpdo.php';
+
 
 use FattureInCloud\Api\SuppliersApi;
 use FattureInCloud\Api\ClientsApi;
@@ -17,6 +19,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 //cancello il token
 //unset($_SESSION['token']);
+//unset($_SESSION['refresh']);
 
 $oauth = new OAuth2AuthorizationCodeManager("gYeBVqHZDNTB8LbuOc4XgLBN2POEoeB7", "8vWWSgLetSGpV7O9wpE4BAvaRorF3beWDNtJeUVb60GXSVS7guWAQAoL0pUESihn", "http://sviluppo4.locl/oauth.php");
 if (!function_exists('refreshAccessToken')) {
@@ -28,6 +31,8 @@ if (!function_exists('refreshAccessToken')) {
         $_SESSION['refresh'] = $newToken->getRefreshToken();
     }
 }
+
+
 
 // Se il token di accesso è presente nella sessione e non è scaduto
 if (isset($_SESSION['token'])) {
@@ -77,7 +82,9 @@ if (isset($_SESSION['token'])) {
             $obj = $oauth->fetchToken($code);
             if (!isset($obj->error)) {
                 $_SESSION['token'] = $obj->getAccessToken();
+                saveAccessToken($obj->getAccessToken(), 'token');
                 $_SESSION['refresh'] = $obj->getRefreshToken();
+                saveAccessToken($obj->getRefreshToken(), 'refreshtoken');
                 $accessToken = $_SESSION['token'];
                 // Utilizza $accessToken per effettuare chiamate API sicure
                 // ...

@@ -2234,9 +2234,7 @@ function analisiBottiglie($anno)
 {
     include(__DIR__ . '/../../include/configpdo.php');
     try {
-        $query = "SELECT SUM(prodotti.qta) AS totale_qta FROM `prodotti` 
-                   INNER JOIN fatture ON prodotti.id_ffic = fatture.id_ffic 
-                   WHERE YEAR(fatture.data_f) = :anno";
+        $query = "SELECT SUM(qta) AS totale_qta FROM `prodotti` WHERE anno = :anno";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
         $stmt->execute();
@@ -2329,6 +2327,7 @@ function analisiImponibilePerProvincia($anno)
     try {
         $query = "SELECT
         nome_provincia,
+        pv,
         SUM(f.imp_netto) AS imponibile,
         SUM(f.imp_netto)/(SELECT SUM(imp_netto) FROM fatture WHERE YEAR(data_f) =:anno)*100 AS percentuale
     FROM
@@ -2399,6 +2398,7 @@ function analisiMiglioriClienti($anno)
     include(__DIR__ . '/../../include/configpdo.php');
     try {
         $query = "SELECT
+        c.id_cfic,
         c.nome AS nome_cliente,
         c.provincia,
         SUM(f.imp_netto) AS imponibile
@@ -2515,11 +2515,10 @@ function analisiBottigliePerTipo($anno)
             (SUM(CASE WHEN lp.nome_prodotto LIKE '%75CL%' THEN p.qta ELSE 0 END) / $tot) * 100 AS percentuale_75cl,
             (SUM(CASE WHEN lp.nome_prodotto LIKE '%150CL%' THEN p.qta ELSE 0 END) / $tot) * 100 AS percentuale_150cl
         FROM
-            fatture f
-            INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+            prodotti p 
             JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
         WHERE
-            YEAR(f.data_f) = :anno";
+            p.anno= :anno";
 
         $stmt = $db->prepare($query);
         $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
@@ -2637,11 +2636,10 @@ function analisiBottigliePerVarietaId($anno)
                 lp.nome_prodotto,
                 SUM(p.qta) AS quantita_prodotto
             FROM
-                fatture f
-                INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+              prodotti p
                 INNER  JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
             WHERE
-                YEAR(f.data_f) = :anno AND lp.varieta= :varieta
+              p.anno = :anno AND lp.varieta= :varieta
             GROUP BY
                 lp.nome_prodotto";
             $stmt = $db->prepare($query);

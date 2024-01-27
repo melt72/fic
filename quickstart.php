@@ -61,88 +61,122 @@ try {
 //     $tipe = $client->getEmail();
 //     echo $name . ' ' . $tipe . ' </br>';
 // }
-$campi = "amount_net,entity,amount_vat";
-$q = "date >= '2023-10-21'";
-// // id, tipo, campi  , detailed, , page, per_page, filtro
-$issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'invoice', null, 'detailed', null, 1, 5, $q);
-//print_r($issuedEInvoices);
-if ($issuedEInvoices->getData()) {
-    //     // Accedi alla proprietà 'total' dell'array 'data'
-    $totali = $issuedEInvoices['total']; //numero di fatture trovate
 
-    //     // Ora puoi utilizzare la variabile $totali
-    echo "Il valore di total è: " . $totali;
-} else {
-    echo "Nessun dato restituito o proprietà 'total' non presente.";
-}
-foreach ($issuedEInvoices->getData() as $issuedEInvoice) {
-
-    $id = $issuedEInvoice->getId(); //id della fattura
-    $id_cliente = $issuedEInvoice->getEntity()->getId();    //id cliente
-    $numero = $issuedEInvoice->getNumber(); //numero della fattura
-    $imp_netto = $issuedEInvoice->getAmountNet(); //importo netto
-    $iva = $issuedEInvoice->getAmountVat(); //iva
-    $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
-    //    $note = $issuedEInvoice->getNotes(); //note fattura non visibile
-    $oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC
-    $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato della fattura
-
-    $data = $issuedEInvoice->getDate(); //data della fattura
-    //la data in formato aaaa-mm-gg
+$document_id = 319125435; // int | The ID of the document.
+$fields = 'fields_example'; // string | List of comma-separated fields.
+$fieldset = 'fieldset_example'; // string | Name of the fieldset.
+$field = 'status,paid_date';
+try {
+    $result = $issuedEInvoicesApi->getIssuedDocument($firstCompanyId, $document_id, null, 'detailed');
+    print_r($result);
+    $status = $result->getData()->getPaymentsList()[0]->getStatus();
+    echo $status;
+    $data = $result->getData()->getDate();
     $data = $data->format('Y-m-d');
-    $data_scadenza = $issuedEInvoice->getPaymentsList()[0]->getDueDate(); //data di scadenza della fattura
-
-    //la data in formato aaaa-mm-gg
+    $data = date("d-m-Y", strtotime($data));
+    echo $data;
+    $data_scadenza = $result->getData()->getPaymentsList()[0]->getDueDate();
     $data_scadenza = $data_scadenza->format('Y-m-d');
-
-    // Creare un array per la lista dei prodotti e quantità
-    $lista_prodotti = array();
-    $prodotti_fattura = $issuedEInvoice->getItemsList();
-    $datiFattura = array(
-        'id' => $id,
-        'id_cliente' => $id_cliente,
-        'numero' => $numero,
-        'imp_netto' => $imp_netto,
-        'iva' => $iva,
-        'imp_tot' => $imp_tot,
-        'note' => $oggetto,
-        'status' => $status,
-        'data' => $data,
-        'data_scadenza' => $data_scadenza
-    );
-    // Iterare attraverso la lista dei prodotti
-    foreach ($prodotti_fattura as $prodotto) {
-        $nome_prodotto = $prodotto->getName(); // nome del prodotto
-        $quantita = $prodotto->getQty(); // quantità del prodotto
-
-        // Aggiungere il prodotto e la quantità all'array
-        $lista_prodotti[] = array(
-            'nome_prodotto' => $nome_prodotto,
-            'quantita' => $quantita
-        );
-    }
-    $datiFattura['prodotti'] = $lista_prodotti;
-
-    // Aggiungi l'array datiFattura all'array fatture_totali
-    $fatture_totali[] = $datiFattura;
-    //$prodotto = $issuedEInvoice->getItemsList()[0]->getName(); //prodotto fattura
-
-    //     $am = $issuedEInvoice->getAmountNet(); //importo fattura
-    //     $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato pagamento
-    //     $data_pag = $issuedEInvoice->getPaymentsList()[0]->getPaidDate();   //data pagamento
-
-    //     if (!empty($data_pag)) :
-    //         $data_pag = $data_pag->format('Y-m-d');
-    //         $data_pag = date("d-m-Y", strtotime($data_pag));
-    //     else :
-    //         $data_pag = 'Non pagata';
-    //     endif;
-    //     //trasformo datetime in stringa
-    //     $data = $data->format('Y-m-d');
-    //     //trasformo la data in formato italiano
-    //     $data = date("d-m-Y", strtotime($data));
-
-    // echo $imp . ' ' . $note . ' ' . $oggetto . '</br>';
+    $data_scadenza = date("d-m-Y", strtotime($data_scadenza));
+    echo $data_scadenza;
+    $data_pag = $result->getData()->getPaymentsList()[0]->getPaidDate();
+    if (!empty($data_pag)) :
+        $data_pag = $data_pag->format('Y-m-d');
+        $data_pag = date("d-m-Y", strtotime($data_pag));
+        echo $data_pag;
+    else :
+        $data_pag = 'Non pagata';
+    endif;
+} catch (Exception $e) {
+    echo 'Exception when calling IssuedDocumentsApi->getIssuedDocument: ', $e->getMessage(), PHP_EOL;
 }
+
+
+
+
+
+
+// Lista fatture
+// $campi = "amount_net,entity,amount_vat";
+// $q = "date >= '2023-10-21'";
+// // // id, tipo, campi  , detailed, , page, per_page, filtro
+// $issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'invoice', null, 'detailed', null, 1, 5, $q);
+// //print_r($issuedEInvoices);
+// if ($issuedEInvoices->getData()) {
+
+//     $totali = $issuedEInvoices['total']; //numero di fatture trovate
+
+//     echo "Il valore di total è: " . $totali;
+// } else {
+//     echo "Nessun dato restituito o proprietà 'total' non presente.";
+// }
+// foreach ($issuedEInvoices->getData() as $issuedEInvoice) {
+
+//     $id = $issuedEInvoice->getId(); //id della fattura
+//     $id_cliente = $issuedEInvoice->getEntity()->getId();    //id cliente
+//     $numero = $issuedEInvoice->getNumber(); //numero della fattura
+//     $imp_netto = $issuedEInvoice->getAmountNet(); //importo netto
+//     $iva = $issuedEInvoice->getAmountVat(); //iva
+//     $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
+//     //    $note = $issuedEInvoice->getNotes(); //note fattura non visibile
+//     $oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC
+//     $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato della fattura
+
+//     $data = $issuedEInvoice->getDate(); //data della fattura
+//     //la data in formato aaaa-mm-gg
+//     $data = $data->format('Y-m-d');
+//     $data_scadenza = $issuedEInvoice->getPaymentsList()[0]->getDueDate(); //data di scadenza della fattura
+
+//     //la data in formato aaaa-mm-gg
+//     $data_scadenza = $data_scadenza->format('Y-m-d');
+
+//     // Creare un array per la lista dei prodotti e quantità
+//     $lista_prodotti = array();
+//     $prodotti_fattura = $issuedEInvoice->getItemsList();
+//     $datiFattura = array(
+//         'id' => $id,
+//         'id_cliente' => $id_cliente,
+//         'numero' => $numero,
+//         'imp_netto' => $imp_netto,
+//         'iva' => $iva,
+//         'imp_tot' => $imp_tot,
+//         'note' => $oggetto,
+//         'status' => $status,
+//         'data' => $data,
+//         'data_scadenza' => $data_scadenza
+//     );
+//     // Iterare attraverso la lista dei prodotti
+//     foreach ($prodotti_fattura as $prodotto) {
+//         $nome_prodotto = $prodotto->getName(); // nome del prodotto
+//         $quantita = $prodotto->getQty(); // quantità del prodotto
+
+//         // Aggiungere il prodotto e la quantità all'array
+//         $lista_prodotti[] = array(
+//             'nome_prodotto' => $nome_prodotto,
+//             'quantita' => $quantita
+//         );
+//     }
+//     $datiFattura['prodotti'] = $lista_prodotti;
+
+//     // Aggiungi l'array datiFattura all'array fatture_totali
+//     $fatture_totali[] = $datiFattura;
+//$prodotto = $issuedEInvoice->getItemsList()[0]->getName(); //prodotto fattura
+
+//     $am = $issuedEInvoice->getAmountNet(); //importo fattura
+//     $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato pagamento
+//     $data_pag = $issuedEInvoice->getPaymentsList()[0]->getPaidDate();   //data pagamento
+
+//     if (!empty($data_pag)) :
+//         $data_pag = $data_pag->format('Y-m-d');
+//         $data_pag = date("d-m-Y", strtotime($data_pag));
+//     else :
+//         $data_pag = 'Non pagata';
+//     endif;
+//     //trasformo datetime in stringa
+//     $data = $data->format('Y-m-d');
+//     //trasformo la data in formato italiano
+//     $data = date("d-m-Y", strtotime($data));
+
+// echo $imp . ' ' . $note . ' ' . $oggetto . '</br>';
+//}
 echo 'fine';
-print_r($fatture_totali);

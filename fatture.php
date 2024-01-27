@@ -88,11 +88,15 @@ foreach ($fatture as $fattura) {
             }
             //se La quantità è Diverso da 1 Allora inserisco nella tabella prodotti 
             if ($prodotto['quantita'] != '1') {
-                $sql = "INSERT INTO prodotti (id_prod, id_ffic, qta) VALUES (:codprod, :idffic, :quantita)";
+                $anno_fattura = new DateTime($data);
+                $anno = $anno_fattura->format('Y');
+                $sql = "INSERT INTO prodotti (id_prod, id_ffic, qta, anno, data_f) VALUES (:codprod, :idffic, :quantita, :anno, :data_f)";
                 $stmt = $db->prepare($sql);
                 $stmt->bindParam('codprod', $prodotto['cod_prodotto'], PDO::PARAM_INT);
                 $stmt->bindParam('idffic', $id, PDO::PARAM_INT);
                 $stmt->bindParam('quantita', $prodotto['quantita'], PDO::PARAM_INT);
+                $stmt->bindParam('anno', $anno, PDO::PARAM_INT);
+                $stmt->bindParam('data_f', $data, PDO::PARAM_STR);
                 $stmt->execute();
                 echo 'aggiunto prodotto<br>';
             }

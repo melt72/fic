@@ -138,7 +138,9 @@ if (isset($_GET['c'])) {
                                                     <div class="">
                                                         <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $imponibile['totale_non_pagato_scaduto'] ?></h4>
                                                         <p class="mb-0 tx-12 text-white op-7">Alla data di oggi</p>
-                                                    </div>
+                                                    </div><span class="float-end my-auto ms-auto">
+                                                        <button class="btn btn-primary btn-sm vedi_scaduti_cliente" data-id="<?= $id_del_cliente ?>"><i class="fe fe-eye text-white"></i></button>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

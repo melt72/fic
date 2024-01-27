@@ -110,7 +110,10 @@ if (isset($_GET['a'])) {
 									<div class="d-flex">
 										<div class="">
 											<h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $imponibile['non_pagato_scaduto'] ?></h4>
-										</div>
+
+										</div><span class="float-end my-auto ms-auto">
+											<button class="btn btn-primary btn-sm vedi_scaduti"><i class="fe fe-eye text-white"></i></button>
+										</span>
 									</div>
 								</div>
 							</div>
@@ -228,26 +231,31 @@ if (isset($_GET['a'])) {
 								</div>
 							</div><!-- card-header -->
 							<div class="card-body p-0">
-								<?php
-								$province = analisiImponibilePerProvincia($anno);
-								foreach ($province as $riga) :
-								?>
-									<div class="browser-stats">
-										<div class="d-flex align-items-center item  border-bottom">
-											<div class="d-flex">
-												<div class="">
-													<h6 class=""><?= $riga['nome_provincia']; ?></h6>
-												</div>
-											</div>
+								<div class="table-responsive country-table">
+									<table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+										<thead>
+											<tr>
+												<th class="wd-lg-50p">Provincia</th>
+												<th class="wd-lg-25p tx-right">Imponibile</th>
 
-											<div class="ms-auto my-auto">
-												<div class="d-flex">
-													<span class="me-4 my-auto">€ <?= arrotondaEFormatta($riga['imponibile']); ?></span>
-												</div>
-											</div>
-										</div>
-									</div>
-								<?php endforeach; ?>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php
+											$province = analisiImponibilePerProvincia($anno);
+											foreach ($province as $riga) :
+											?>
+												<tr>
+													<td><?= $riga['nome_provincia']; ?></td>
+													<td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
+													<td class="tx-right tx-medium tx-inverse"><button class="btn btn-info btn-icon me-2 btn-b vedi-provincia" data-pv="<?= $riga['pv'] ?>"><i class="fe fe-eye"></i></button></td>
+												</tr>
+											<?php endforeach; ?>
+										</tbody>
+									</table>
+								</div>
+
 							</div>
 						</div>
 					</div>
@@ -257,7 +265,6 @@ if (isset($_GET['a'])) {
 							<div class=" card-header p-0 d-flex justify-content-between">
 								<h4 class="card-title mb-1">Migliori Clienti</h4>
 								<span class="tx-12 tx-muted mb-3 ">Anno <?= $anno ?></span>
-
 							</div>
 
 							<div class="table-responsive country-table">
@@ -267,6 +274,7 @@ if (isset($_GET['a'])) {
 											<th class="wd-lg-50p">Nome</th>
 											<th class="wd-lg-25p tx-right">Imponibile</th>
 											<th class="wd-lg-25p tx-right">Prov/Stato</th>
+											<th></th>
 										</tr>
 									</thead>
 									<tbody>
@@ -278,6 +286,7 @@ if (isset($_GET['a'])) {
 												<td><?= $riga['nome_cliente']; ?></td>
 												<td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
 												<td class="tx-right tx-medium tx-inverse"><?= $riga['provincia']; ?></td>
+												<td class="tx-right tx-medium tx-inverse"><a href="analisi-clienti.php?c=<?= $riga['id_cfic'] ?>" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>
 											</tr>
 										<?php endforeach; ?>
 
@@ -400,4 +409,5 @@ if (isset($_GET['a'])) {
 	/*closed Apex charts(#bar)*/
 
 	/*--- Map ---*/
+	var anno = '<?= $anno ?>';
 </script>

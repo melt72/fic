@@ -211,7 +211,7 @@ $varieta_vino = 'cabernet';
                 <!-- row closed -->
                 <!-- row -->
                 <?php
-                //     $aa = analisiBottigliePerVarietaId($anno);
+
                 $array = array('cabernet', 'filorosso', 'pinot nero', 'chardonnay',  'friulano', 'malvasia', 'pinot grigio',  'ribolla', 'sauvignon');
                 ?>
                 <div class="row row-sm">
