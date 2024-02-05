@@ -149,6 +149,8 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                     </div><!-- col-6 -->
                 </div>
                 <!-- row closed -->
+
+                <!-- divisione per macroregioni -->
                 <div class="row row-sm">
                     <?php
                     $macro = analisiBottigliePerMacroRegione($anno);
@@ -186,6 +188,7 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                             <div class="card user-wideget user-wideget-widget widget-user">
                                 <div class="widget-user-header bg-primary">
                                     <h3 class="widget-user-username">Nord-Ovest</h3>
+                                    <?= nomeRegione('Nord - Ovest') ?>
                                 </div>
 
                                 <div class="user-wideget-footer">
@@ -220,6 +223,7 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                             <div class="card user-wideget user-wideget-widget widget-user">
                                 <div class="widget-user-header bg-primary">
                                     <h3 class="widget-user-username">Nord-Est</h3>
+                                    <?= nomeRegione('Nord - Est') ?>
                                 </div>
 
                                 <div class="user-wideget-footer">
@@ -253,7 +257,8 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                         <div class="col-sm-12 col-xl-4 col-lg-12">
                             <div class="card user-wideget user-wideget-widget widget-user">
                                 <div class="widget-user-header bg-warning">
-                                    <h3 class="widget-user-username">Cento</h3>
+                                    <h3 class="widget-user-username">Centro</h3>
+                                    <?= nomeRegione('Centro') ?>
                                 </div>
                                 <div class="user-wideget-footer">
                                     <div class="row">
@@ -288,6 +293,7 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                             <div class="card user-wideget user-wideget-widget widget-user">
                                 <div class="widget-user-header bg-danger">
                                     <h3 class="widget-user-username">Sud</h3>
+                                    <?= nomeRegione('Sud') ?>
                                 </div>
                                 <div class="user-wideget-footer">
                                     <div class="row">
@@ -320,6 +326,7 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                             <div class="card user-wideget user-wideget-widget widget-user">
                                 <div class="widget-user-header bg-primary">
                                     <h3 class="widget-user-username">Sud</h3>
+                                    <?= nomeRegione('Isole') ?>
                                 </div>
                                 <div class="user-wideget-footer">
                                     <div class="row">

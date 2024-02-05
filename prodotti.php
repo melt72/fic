@@ -8,6 +8,7 @@ $prodotti = get_products();
 foreach ($prodotti as $prodotto) {
     $id = $prodotto['id'];
     $nome = $prodotto['name'];
+    $codprod = $prodotto['cod'];
     $varieta = determinaVarietaVino($nome);
     if ($varieta == 'Cabernet' || $varieta == 'Pinot Nero' || $varieta == 'Filorosso') {
         $tipo = 'rosso';
@@ -23,8 +24,9 @@ foreach ($prodotti as $prodotto) {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$result) {
         //se il prodotto non è presente nel database lo inserisco
-        $sql = "INSERT INTO lista_prodotti (prod_id, nome_prodotto, varieta,tipo) VALUES (:id, :nome, :varieta, :tipo)";
+        $sql = "INSERT INTO lista_prodotti (cod_prod, prod_id, nome_prodotto, varieta,tipo) VALUES (:codprod, :id, :nome, :varieta, :tipo)";
         $stmt = $db->prepare($sql);
+        $stmt->bindParam('codprod', $codprod, PDO::PARAM_STR);
         $stmt->bindParam('id', $id, PDO::PARAM_INT);
         $stmt->bindParam('nome', $nome, PDO::PARAM_STR);
         $stmt->bindParam('varieta', $varieta, PDO::PARAM_STR);

@@ -25,7 +25,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
     $controllo = PasswordCasuale(8);
     try {
         if ($idutente != '') : // MODIFICA UTENTE
-            $query = "UPDATE `user` SET `nome`=:nome,`cognome`=:cognome,`username`=:usernameutente,`controllo`=:controllo,`ruolo`=:ruoloutente WHERE `id_user`='$idutente'";
+            $query = "UPDATE `user` SET `nome`=:nome,`cognome`=:cognome,`username`=:usernameutente,`controllo`=:controllo,`accesso`=:ruoloutente WHERE `id_user`='$idutente'";
             $messaggio = 'Utente modificato correttamente';
         else : // CREAZIONE UTENTE
             $query = "INSERT INTO `user`(`nome`,`cognome`,`username`,`controllo`, `ruolo`) VALUES (:nome, :cognome, :usernameutente, :controllo, :ruoloutente)";
@@ -37,7 +37,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         $stmt->bindParam('cognome', $cognome, PDO::PARAM_STR);
         $stmt->bindParam('controllo', $controllo, PDO::PARAM_STR);
         $stmt->bindParam('usernameutente', $email, PDO::PARAM_STR);
-        $stmt->bindParam('ruoloutente', $ruolo, PDO::PARAM_STR);
+        $stmt->bindParam('ruoloutente', $ruolo, PDO::PARAM_INT);
         $stmt->execute();
         if ($idutente == '') :
             $ultimo =  $db->lastInsertId();

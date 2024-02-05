@@ -9,7 +9,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             $anno = $_POST['anno'];
             $data_oggi = date_create(date('Y-m-d'));
             try {
-                $query = "SELECT nome, imp_netto,num_f,data_f, data_scadenza FROM `fatture` f INNER JOIN clienti c ON f.id_cfic=c.id_cfic WHERE YEAR(data_f)=:anno   AND data_scadenza < CURDATE() ORDER BY data_scadenza ASC";
+                $query = "SELECT nome, imp_netto,num_f,data_f, data_scadenza FROM `fatture` f INNER JOIN clienti c ON f.id_cfic=c.id_cfic WHERE YEAR(data_f)=:anno AND status ='not_paid'   AND data_scadenza < CURDATE() ORDER BY data_scadenza ASC";
                 $stmt = $db->prepare($query);
                 $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
                 $stmt->execute();

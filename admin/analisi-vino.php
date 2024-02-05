@@ -145,7 +145,6 @@ $varieta_vino = 'cabernet';
                 <!-- row -->
                 <?php
                 $varieta_totale = analisiBottigliePerVarietaId($anno);
-
                 ?>
                 <div class="row row-sm">
                     <div class="col-md-6 col-lg-6 col-xl-6">
@@ -228,22 +227,20 @@ $varieta_vino = 'cabernet';
                                     </div>
                                 </div><!-- card-header -->
                                 <div class="card-body p-0">
-                                    <?php foreach ($varieta as $riga) : ?>
-                                        <div class="browser-stats">
-                                            <div class="d-flex align-items-center item  border-bottom">
-                                                <div class="d-flex">
-                                                    <div class="">
-                                                        <h6 class=""><?= $riga['nome']; ?></h6>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto my-auto">
-                                                    <div class="d-flex">
-                                                        <span class="me-4 my-auto"><?= $riga['quantita']; ?> BT</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
+                                    <div class="table-responsive country-table">
+                                        <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                            <tbody>
+                                                <?php foreach ($varieta as $riga) : ?>
+                                                    <tr>
+                                                        <td class="tx-right tx-medium tx-inverse"><?= $riga['cod_prod'] ?></td>
+                                                        <td><?= strtoupper($riga['nome']) ?></td>
+                                                        <td class="tx-right tx-medium tx-inverse"><?= $riga['quantita']; ?> BT</td>
+
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -1160,7 +1160,7 @@ function status_fattura($id_fatt)
             $status_fattura = '<span class="badge badge-pill bg-danger me-1 my-2">Errore</span>';
         }
         if ($status == 'paid') {
-            $status_fattura = '<span class="badge badge-pill bg-primary me-1 my-2">Pagata</span>';
+            $status_fattura = '<span class="badge badge-pill bg-primary me-1 my-2">Saldata</span>';
 
             // Verifica se l'agente è associato
             $agente_associato = getDatiAgente($row['sigla']);
@@ -1172,7 +1172,7 @@ function status_fattura($id_fatt)
             }
         }
         if ($status == 'not_paid') {
-            $status_fattura = '<span class="badge badge-pill bg-light me-1 my-2">Non ancora pagata</span>';
+            $status_fattura = '<span class="badge badge-pill bg-light me-1 my-2">Non ancora saldata</span>';
         }
 
         if ($status == 'not_paid' && $data_oggi > $data_scadenza) {
@@ -2427,6 +2427,38 @@ function analisiMiglioriClienti($anno)
     }
 }
 
+//Funzione per determinare Il nome della regione all'interno della macroregione
+function nomeRegione($macro)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        pr.nome_regione AS regione
+    FROM
+        province pr
+    WHERE
+        pr.nome_macro = :macro  
+    GROUP BY
+        regione";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':macro', $macro, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $regione = '';
+        foreach ($result as $row) {
+            $regione .= $row['regione'] . ' - ';
+        }
+        //elimino l'ultimo trattino
+        return rtrim($regione, ' - ');
+        // Restituisci la somma delle quantità
+        echo $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
 //Funzione per determinare importo netto per Una macro regione .
 function analisiImportoPerMacroRegione($anno)
 {
@@ -2633,6 +2665,7 @@ function analisiBottigliePerVarietaId($anno)
     foreach ($array as $varieta) {
         try {
             $query = "SELECT
+                lp.cod_prod,
                 lp.nome_prodotto,
                 SUM(p.qta) AS quantita_prodotto
             FROM
@@ -2649,9 +2682,10 @@ function analisiBottigliePerVarietaId($anno)
 
             $prodottiVarieta = array();
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $codProd = $row['cod_prod'];
                 $nomeProdotto = $row['nome_prodotto'];
                 $quantita = $row['quantita_prodotto'];
-                $prodottiVarieta[] = array('nome' => $nomeProdotto, 'quantita' => $quantita);
+                $prodottiVarieta[] = array('cod_prod' => $codProd, 'nome' => $nomeProdotto, 'quantita' => $quantita);
             }
 
             $resultArray[$varieta] = $prodottiVarieta;

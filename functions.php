@@ -45,10 +45,12 @@ function get_products($page = 1)
         foreach ($products->getData() as $product) {
 
             $id = $product->getId(); //id del prodotto
+            $cod = $product->getCode(); //codice del prodotto
             $name = $product->getName(); //nome del prodotto
 
             $datiProdotto = array(
                 'id' => $id,
+                'cod' => $cod,
                 'name' => $name
             );
             // Aggiungi l'array datiProdotto all'array prodotti_totali
@@ -77,7 +79,7 @@ function get_clients($page = 1)
         $companies = $userApi->listUserCompanies();
 
         $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
-        $clients = $clientsAPI->listClients($firstCompanyId, null, null, null, $page, 50);
+        $clients = $clientsAPI->listClients($firstCompanyId, null, 'detailed', null, $page, 50);
         //se ci sono clienti leggo il numero di pagine
         if ($clients->getData()) {
             $pagine = $clients['last_page']; //numero di fatture trovate
@@ -92,12 +94,15 @@ function get_clients($page = 1)
             $citta = $client->getAddressCity(); //città del cliente
             $provincia = $client->getAddressProvince(); //provincia del cliente
             $paese = $client->getCountry(); //paese del cliente
+            $note = $client->getNotes(); //note extra del cliente
+
             $datiCliente = array(
                 'id' => $id,
                 'name' => $name,
                 'citta' => $citta,
                 'provincia' => $provincia,
-                'paese' => $paese
+                'paese' => $paese,
+                'note' => $note
             );
             // Aggiungi l'array datiCliente all'array clienti_totali
             $clienti_totali[] = $datiCliente;
@@ -112,6 +117,23 @@ function get_clients($page = 1)
     } catch (Exception $e) {
         echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;
     }
+}
+
+//Funziona per determinare id_zona partendo dalla codzona
+function get_id_zona($codzona)
+{
+    include 'include/configpdo.php';
+    $sql = "SELECT id_zona FROM zone_roma WHERE codzona = :codzona";
+    $stmt = $db->prepare($sql);
+    $stmt->bindParam('codzona', $codzona, PDO::PARAM_STR);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($result) {
+        $id_zona = $result['id_zona'];
+    } else {
+        $id_zona = 0;
+    }
+    return $id_zona;
 }
 
 //funzione per prelevare le fatture da fatture in cloud
@@ -154,14 +176,28 @@ function get_fatture($page = 1, $data_inizio = '0')
             $imp_netto = $issuedEInvoice->getAmountNet(); //importo netto
             $iva = $issuedEInvoice->getAmountVat(); //iva
             $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
-            //    $note = $issuedEInvoice->getNotes(); //note fattura non visibile
-            $oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC
-            if ($issuedEInvoice->getPaymentsList()) {
-                $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato della fattura
+            $oggetto = $issuedEInvoice->getNotes(); //note fattura non visibile
+            //$oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC    
+
+            //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
+
+            $paymentsList = $issuedEInvoice->getPaymentsList(); //lista pagamenti
+            if (!empty($paymentsList)) {
+                $status = 'not_paid';
+                $status = $paymentsList[0]->getStatus(); //stato della fattura
+                // Verificare se ci sono altre voci nell'elenco
+                if (count($paymentsList) > 1) {
+                    // Ci sono altre voci nell'elenco
+                    // Puoi fare qualcosa con le voci aggiuntive se necessario
+                    // Ad esempio, iterare attraverso l'elenco e ottenere le informazioni
+                    foreach ($paymentsList as $payment) {
+                        $status = $payment->getStatus();
+                        // Fai qualcosa con lo stato del pagamento...
+                    }
+                }
             } else {
                 $status = null;
             }
-            // $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato della fattura
 
             $data = $issuedEInvoice->getDate(); //data della fattura
             //la data in formato aaaa-mm-gg
@@ -262,7 +298,26 @@ function get_fattura($id_doc)
         $oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC
         $iva = $issuedEInvoice->getAmountVat(); //iva
         $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
-        $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato della fattura
+        //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
+
+        $paymentsList = $issuedEInvoice->getPaymentsList(); //lista pagamenti
+        if (!empty($paymentsList)) {
+            $status = 'not_paid';
+            $status = $paymentsList[0]->getStatus(); //stato della fattura
+            // Verificare se ci sono altre voci nell'elenco
+            if (count($paymentsList) > 1) {
+                // Ci sono altre voci nell'elenco
+                // Puoi fare qualcosa con le voci aggiuntive se necessario
+                // Ad esempio, iterare attraverso l'elenco e ottenere le informazioni
+                foreach ($paymentsList as $payment) {
+                    $status = $payment->getStatus();
+                    // Fai qualcosa con lo stato del pagamento...
+                }
+            }
+        } else {
+            $status = null;
+        }
+        //    $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato della fattura
 
         $data = $issuedEInvoice->getDate(); //data della fattura
         //la data in formato aaaa-mm-gg
@@ -293,7 +348,7 @@ function get_fattura($id_doc)
 //Funzione per prelevare lo status della fattura
 function get_status($id_doc)
 {
-    include 'config-api.php';
+    include 'config-api2.php';
     //array delle fatture
     $fatture = array();
     try {
@@ -433,6 +488,7 @@ function check_status()
                 $stmt->bindParam('status', $status, PDO::PARAM_STR);
                 $stmt->bindParam('datapagamento', $data_pag, PDO::PARAM_STR);
                 $stmt->execute();
+                echo 'fattura aggiornata ' . $document_id . '<br>';
             }
         } catch (Exception $e) {
             echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;

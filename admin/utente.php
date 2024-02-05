@@ -17,7 +17,7 @@ if (isset($_GET['id'])) {
         $stmt->bindParam('iduser', $_GET['id'], PDO::PARAM_STR);
         $stmt->execute();
         $utente = $stmt->fetch(PDO::FETCH_ASSOC);
-        $autorizza = $utente['ruolo'];
+        $autorizza = $utente['accesso'];
     } catch (PDOException $e) {
         echo "Error : " . $e->getMessage();
     }
@@ -162,13 +162,13 @@ if (isset($_GET['id'])) {
                                             <div class="col-md-9">
                                                 <select class="form-control select2-no-search" data-bs-placeholder="Select Country" name="ruolo" id="ruolo" required <?= $modifica ?>>
                                                     <option value="">Scegli ruolo utente</option>
-                                                    <option value="sadmin" <?= $autorizza == 'sadmin' ? ' selected' : '' ?>>SuperAdmin</option>
-                                                    <option value="admin" <?= $autorizza == 'admin' ? ' selected' : '' ?>>Admin</option>
-                                                    <option value="segr" <?php
-                                                                            if ($autorizza == 'segr') {
-                                                                                echo ' selected';
-                                                                            }
-                                                                            ?>>Segretaria</option>
+                                                    <option value="1" <?= $autorizza == '1' ? ' selected' : '' ?>>SuperAdmin</option>
+                                                    <option value="2" <?= $autorizza == '2' ? ' selected' : '' ?>>Admin</option>
+                                                    <option value="3" <?php
+                                                                        if ($autorizza == '3') {
+                                                                            echo ' selected';
+                                                                        }
+                                                                        ?>>Segretaria</option>
                                                     <option value="user" <?php
                                                                             if ($autorizza == 'user') {
                                                                                 echo ' selected';

@@ -14,6 +14,8 @@ try {
     $stmt->bindParam('id_liquidazione', $id_fattura, PDO::PARAM_INT);
     $stmt->execute();
     $row   = $stmt->fetch(PDO::FETCH_ASSOC);
+    $nome_agente = $row['nome_agente'];
+    $data = date('d/m/Y', strtotime($row['data']));
 } catch (PDOException $e) {
     echo "Error : " . $e->getMessage();
 }
@@ -117,6 +119,10 @@ $html = '
     .rtl table tr td:nth-child(2) {
         text-align: left;
     }
+
+    .scritte{
+        font-size: 13px;
+    }
     </style>
 </head>
 
@@ -128,8 +134,8 @@ $html = '
                 <img src="logo.jpg" style="width:100%; max-width:250px;">
                             </td>
                 <td colspan="3">
-                Data: ' . date('d/m/Y', strtotime($row['data'])) . '<br><br><br><br>
-                AGENTE: <br>' . $row['nome_agente'] . '</td>
+                Data: ' . $data . '<br><br><br><br>
+                AGENTE: <br>' . $nome_agente . '</td>
             </tr>
             <tr class="heading">
                 <td colspan="3">
@@ -153,7 +159,7 @@ $html .= '
 </td>
 
 <td colspan="3">
-    Totale pagamento : ' . $row['importo'] . ' €
+    Totale pagamento : ' . arrotondaEFormatta($row['importo']) . ' €
 </td>
 
 </tr>
@@ -165,17 +171,20 @@ $html .= '
 </tr>
 
 <tr class="heading">
-    <td colspan="2">
+    <td colspan="2" class="scritte">
         Cliente
     </td>
-    <td>N°</td>
-    <td>
+    <td class="scritte">N°</td>
+    <td class="scritte">
+        Totale Fattura
+    </td>
+    <td class="scritte">
         Imponibile
     </td>
-    <td>
+    <td class="scritte">
         Provv %
     </td>
-    <td>
+    <td class="scritte">
         Provv €
     </td>
 </tr>';
@@ -200,10 +209,11 @@ WHERE
             $totale += $row['provvigione'];
             $html .= '<tr>
     <td colspan="2">' . $row['nome_cliente'] . '</td>
-    <td>n° ' . $row['num_f'] . ' del ' . date('d/m/Y', strtotime($row['data_f'])) . '</td>
-    <td>' . arrotondaEFormatta($row['imp_netto']) . ' €</td>
-    <td>' . $row['provv_percent'] . ' %</td>
-    <td>' . arrotondaEFormatta($row['provvigione']) . ' €</td>
+    <td class="scritte">n° ' . $row['num_f'] . ' del ' . date('d/m/Y', strtotime($row['data_f'])) . '</td>
+    <td class="scritte">' . arrotondaEFormatta($row['imp_tot']) . ' €</td>
+    <td class="scritte">' . arrotondaEFormatta($row['imp_netto']) . ' €</td>
+    <td class="scritte">' . $row['provv_percent'] . ' %</td>
+    <td class="scritte">' . arrotondaEFormatta($row['provvigione']) . ' €</td>
 </tr>';
         }
     }
@@ -227,5 +237,5 @@ require_once 'assets/vendor/autoload.php';
 $mpdf = new \Mpdf\Mpdf(['mode' => 'c']);
 
 $mpdf->WriteHTML($html);
-$file_name = 'ricevuta.pdf';
+$file_name = 'Velina_' . $nome_agente . '_' . $data . '.pdf';
 $mpdf->Output($file_name, 'I');

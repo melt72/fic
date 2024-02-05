@@ -110,8 +110,8 @@ if (isset($_GET['a'])) {
 									<div class="d-flex">
 										<div class="">
 											<h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $imponibile['non_pagato_scaduto'] ?></h4>
-
-										</div><span class="float-end my-auto ms-auto">
+										</div>
+										<span class="float-end my-auto ms-auto">
 											<button class="btn btn-primary btn-sm vedi_scaduti"><i class="fe fe-eye text-white"></i></button>
 										</span>
 									</div>

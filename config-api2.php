@@ -51,12 +51,12 @@ try {
 } catch (\FattureInCloud\ApiException $e) {
     // Se la chiamata API restituisce un'eccezione, verifica se è dovuta a un token scaduto
     $response = json_decode($e->getResponseBody());
-    print_r($response);
 
     if ($response && isset($response->error) && $response->error == "invalid_token") {
         echo 'Messaggio di errore: ' . $response->error_description . '<br>';
         // Se il token è scaduto, ottieni un nuovo token di accesso utilizzando il token di refresh
         $refreshToken = getToken('refreshtoken');
+        echo 'refresh token: ' . $refreshToken . '<br>';
         $accessToken = refreshAccessToken($oauth, $refreshToken);
         echo 'refresh token';
     }
@@ -85,7 +85,7 @@ try {
 
 
 // Get the API config and construct the service object.
-//$config = FattureInCloud\Configuration::getDefaultConfiguration()->setAccessToken($accessToken);
+$config = FattureInCloud\Configuration::getDefaultConfiguration()->setAccessToken($accessToken);
 
 $userApi = new FattureInCloud\Api\UserApi(
     new GuzzleHttp\Client(),

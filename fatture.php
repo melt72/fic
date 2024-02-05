@@ -73,7 +73,7 @@ foreach ($fatture as $fattura) {
                     } else {
                         $tipo = 'bianco';
                     }
-                    $codice_prodotto = '000' . PasswordCasuale(6, 'num');
+                    $codice_prodotto = '900' . PasswordCasuale(6, 'num');
                     $sql = "INSERT INTO lista_prodotti (prod_id, nome_prodotto , varieta,tipo) VALUES (:codprod,:nome, :varieta, :tipo)";
                     $stmt = $db->prepare($sql);
                     $stmt->bindParam('nome', $prodotto['nome_prodotto'], PDO::PARAM_STR);
