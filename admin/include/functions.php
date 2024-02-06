@@ -2493,6 +2493,41 @@ function analisiImportoPerMacroRegione($anno)
     }
 }
 
+//Funzione per determinare l'importo netto di ciascuna regione anche in percentuale
+function analisiImportoPerRegione($anno, $macro)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    $tot = analisiImponibileNetto($anno);
+    try {
+        $query = "SELECT
+            pr.nome_regione AS regione,
+            SUM(f.imp_netto) AS totale_importo,
+            SUM(f.imp_netto)/$tot*100 AS percentuale_importo
+        FROM
+            fatture f
+        JOIN
+            clienti c ON f.id_cfic = c.id_cfic
+        JOIN 
+            province pr ON c.provincia = pr.pv
+        WHERE
+            YEAR(f.data_f) = :anno AND pr.stato='IT'  AND pr.nome_macro=:macro
+        GROUP BY
+            regione";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->bindParam(':macro', $macro, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Recupera il risultato come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci la somma delle quantità
+        return $result;
+    } catch (PDOException $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
 /**
  * *Funzione per determinare Il numero di bottiglie Venduto in ciascuna citta.
  */

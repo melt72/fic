@@ -182,13 +182,14 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                     ?>
                     <?php
                     if ($nordOvestData != null) {
-
                     ?>
                         <div class="col-sm-12 col-xl-4 col-lg-12">
                             <div class="card user-wideget user-wideget-widget widget-user">
                                 <div class="widget-user-header bg-primary">
                                     <h3 class="widget-user-username">Nord-Ovest</h3>
                                     <?= nomeRegione('Nord - Ovest') ?>
+                                    <?php $reg = analisiImportoPerRegione($anno, 'Nord - Ovest'); ?>
+
                                 </div>
 
                                 <div class="user-wideget-footer">
@@ -209,6 +210,25 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                             <div class="description-block">
                                                 <h5 class="description-header"><?= number_format($nordOvestImponibile['percentuale_importo'], 2) ?>%</h5>
                                                 <span class="description-text">PERCENTUALE</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="table-responsive country-table ">
+                                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                                    <tbody>
+                                                        <?php
+                                                        foreach ($reg as $riga) :
+                                                        ?>
+                                                            <tr>
+                                                                <td><?= $riga['regione']; ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['totale_importo']); ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse"><?= number_format($riga['percentuale_importo'], 2) ?>%</td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
@@ -247,6 +267,26 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                             </div>
                                         </div>
                                     </div>
+                                    <?php $reg = analisiImportoPerRegione($anno, 'Nord - Est'); ?>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="table-responsive country-table ">
+                                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                                    <tbody>
+                                                        <?php
+                                                        foreach ($reg as $riga) :
+                                                        ?>
+                                                            <tr>
+                                                                <td><?= $riga['regione']; ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['totale_importo']); ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse"><?= number_format($riga['percentuale_importo'], 2) ?>%</td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -278,6 +318,26 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                             <div class="description-block">
                                                 <h5 class="description-header"><?= number_format($centroImponibile['percentuale_importo'], 2) ?>%</h5>
                                                 <span class="description-text">PERCENTUALE</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php $reg = analisiImportoPerRegione($anno, 'Centro'); ?>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="table-responsive country-table ">
+                                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                                    <tbody>
+                                                        <?php
+                                                        foreach ($reg as $riga) :
+                                                        ?>
+                                                            <tr>
+                                                                <td><?= $riga['regione']; ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['totale_importo']); ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse"><?= number_format($riga['percentuale_importo'], 2) ?>%</td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
@@ -316,139 +376,178 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php }
-                    if ($isoleData != null) {
-                    ?>
-                        <div class="col-sm-12 col-xl-4 col-lg-12">
-                            <div class="card user-wideget user-wideget-widget widget-user">
-                                <div class="widget-user-header bg-primary">
-                                    <h3 class="widget-user-username">Sud</h3>
-                                    <?= nomeRegione('Isole') ?>
-                                </div>
-                                <div class="user-wideget-footer">
+                                    <?php $reg = analisiImportoPerRegione($anno, 'Sud'); ?>
                                     <div class="row">
-                                        <div class="col-sm-4 border-end">
-                                            <div class="description-block">
-                                                <h5 class="description-header"><?= $isoleData['totale_bottiglie'] ?></h5>
-                                                <span class="description-text">BOTTIGLIE</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-4 border-end">
-                                            <div class="description-block">
-                                                <h5 class="description-header">€ <?= arrotondaEFormatta($isoleImponibile['totale_importo']) ?></h5>
-                                                <span class="description-text">IMPONIBILE</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <div class="description-block">
-                                                <h5 class="description-header"><?= number_format($isoleImponibile['percentuale_importo'], 2) ?>%</h5>
-                                                <span class="description-text">PERCENTUALE</span>
+                                        <div class="col-md-12">
+                                            <div class="table-responsive country-table ">
+                                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                                    <tbody>
+                                                        <?php
+                                                        foreach ($reg as $riga) :
+                                                        ?>
+                                                            <tr>
+                                                                <td><?= $riga['regione']; ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['totale_importo']); ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse"><?= number_format($riga['percentuale_importo'], 2) ?>%</td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        <?php }
+                    if ($isoleData != null) {
+                        ?>
+                            <div class="col-sm-12 col-xl-4 col-lg-12">
+                                <div class="card user-wideget user-wideget-widget widget-user">
+                                    <div class="widget-user-header bg-primary">
+                                        <h3 class="widget-user-username">Sud</h3>
+                                        <?= nomeRegione('Isole') ?>
+                                    </div>
+                                    <div class="user-wideget-footer">
+                                        <div class="row">
+                                            <div class="col-sm-4 border-end">
+                                                <div class="description-block">
+                                                    <h5 class="description-header"><?= $isoleData['totale_bottiglie'] ?></h5>
+                                                    <span class="description-text">BOTTIGLIE</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 border-end">
+                                                <div class="description-block">
+                                                    <h5 class="description-header">€ <?= arrotondaEFormatta($isoleImponibile['totale_importo']) ?></h5>
+                                                    <span class="description-text">IMPONIBILE</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <div class="description-block">
+                                                    <h5 class="description-header"><?= number_format($isoleImponibile['percentuale_importo'], 2) ?>%</h5>
+                                                    <span class="description-text">PERCENTUALE</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php $reg = analisiImportoPerRegione($anno, 'Isole'); ?>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="table-responsive country-table ">
+                                                    <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                                        <tbody>
+                                                            <?php
+                                                            foreach ($reg as $riga) :
+                                                            ?>
+                                                                <tr>
+                                                                    <td><?= $riga['regione']; ?></td>
+                                                                    <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['totale_importo']); ?></td>
+                                                                    <td class="tx-right tx-medium tx-inverse"><?= number_format($riga['percentuale_importo'], 2) ?>%</td>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php } ?>
+
+                            </div>
+                            <div class="row row-sm">
+                                <div class="col-sm-12 col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <div class="d-flex justify-content-between">
+                                                <h3 class="card-title">Province</h3>
+                                            </div>
+                                        </div><!-- card-header -->
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive country-table">
+                                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="wd-lg-50p">Provincia</th>
+                                                            <th class="wd-lg-25p tx-right">Imponibile</th>
+
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php
+                                                        $province = analisiImponibilePerProvincia($anno);
+                                                        foreach ($province as $riga) :
+                                                        ?>
+                                                            <tr>
+                                                                <td><?= $riga['nome_provincia']; ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
+                                                                <td class="tx-right tx-medium tx-inverse"><button class="btn btn-info btn-icon me-2 btn-b vedi-provincia" data-pv="<?= $riga['pv'] ?>"><i class="fe fe-eye"></i></button></td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- col-6 -->
+                                <div class="col-sm-12 col-md-6">
+                                    <div class="card card-table-two">
+                                        <div class=" card-header p-0 d-flex justify-content-between">
+                                            <h4 class="card-title mb-1">Migliori Clienti</h4>
+                                            <span class="tx-12 tx-muted mb-3 ">Anno <?= $anno ?></span>
+
+                                        </div>
+
+                                        <div class="table-responsive country-table">
+                                            <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="wd-lg-50p">Nome</th>
+                                                        <th class="wd-lg-25p tx-right">Imponibile</th>
+                                                        <th class="wd-lg-25p tx-right">Prov/Stato</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php
+                                                    $clienti = analisiMiglioriClienti($anno);
+                                                    foreach ($clienti as $riga) :
+                                                    ?>
+                                                        <tr>
+                                                            <td><?= $riga['nome_cliente']; ?></td>
+                                                            <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
+                                                            <td class="tx-right tx-medium tx-inverse"><?= $riga['provincia']; ?></td>
+                                                            <td class="tx-right tx-medium tx-inverse"><a href="analisi-clienti.php?c=<?= $riga['id_cfic'] ?>" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /Container -->
                         </div>
-                    <?php } ?>
+                        <!-- /main-content -->
+
+                        <!-- Footer opened -->
+                        <?php
+                        include 'partials/footer.php';
+                        include 'partials/modal.php';
+                        ?>
+                        <!-- Footer closed -->
 
                 </div>
-                <div class="row row-sm">
-                    <div class="col-sm-12 col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between">
-                                    <h3 class="card-title">Province</h3>
-                                </div>
-                            </div><!-- card-header -->
-                            <div class="card-body p-0">
-                                <div class="table-responsive country-table">
-                                    <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
-                                        <thead>
-                                            <tr>
-                                                <th class="wd-lg-50p">Provincia</th>
-                                                <th class="wd-lg-25p tx-right">Imponibile</th>
+                <!-- End Page -->
 
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            $province = analisiImponibilePerProvincia($anno);
-                                            foreach ($province as $riga) :
-                                            ?>
-                                                <tr>
-                                                    <td><?= $riga['nome_provincia']; ?></td>
-                                                    <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
-                                                    <td class="tx-right tx-medium tx-inverse"><button class="btn btn-info btn-icon me-2 btn-b vedi-provincia" data-pv="<?= $riga['pv'] ?>"><i class="fe fe-eye"></i></button></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <!-- col-6 -->
-                    <div class="col-sm-12 col-md-6">
-                        <div class="card card-table-two">
-                            <div class=" card-header p-0 d-flex justify-content-between">
-                                <h4 class="card-title mb-1">Migliori Clienti</h4>
-                                <span class="tx-12 tx-muted mb-3 ">Anno <?= $anno ?></span>
-
-                            </div>
-
-                            <div class="table-responsive country-table">
-                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
-                                    <thead>
-                                        <tr>
-                                            <th class="wd-lg-50p">Nome</th>
-                                            <th class="wd-lg-25p tx-right">Imponibile</th>
-                                            <th class="wd-lg-25p tx-right">Prov/Stato</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php
-                                        $clienti = analisiMiglioriClienti($anno);
-                                        foreach ($clienti as $riga) :
-                                        ?>
-                                            <tr>
-                                                <td><?= $riga['nome_cliente']; ?></td>
-                                                <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
-                                                <td class="tx-right tx-medium tx-inverse"><?= $riga['provincia']; ?></td>
-                                                <td class="tx-right tx-medium tx-inverse"><a href="analisi-clienti.php?c=<?= $riga['id_cfic'] ?>" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- /Container -->
-            </div>
-            <!-- /main-content -->
-
-            <!-- Footer opened -->
-            <?php
-            include 'partials/footer.php';
-            include 'partials/modal.php';
-            ?>
-            <!-- Footer closed -->
-
-        </div>
-        <!-- End Page -->
-
-        <!-- Back-to-top -->
-        <?php
-        include 'partials/library.php';
-        ?>
+                <!-- Back-to-top -->
+                <?php
+                include 'partials/library.php';
+                ?>
 
 </body>
 
