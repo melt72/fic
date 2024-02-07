@@ -1852,17 +1852,15 @@ function getDatiAgente($sigla)
 /**
  * *Funzione che scrive nel database la liquidazione
  */
-function setLiquidazione($sigla, $data, $totale, $metodopagamento, $note)
+function setLiquidazione($sigla, $data, $totale)
 {
     include(__DIR__ . '/../../include/configpdo.php');
     try {
-        $query = "INSERT INTO `liquidazioni`(`sigla`, `data`, `importo`, `pagamento`, `note`) VALUES (:sigla,:data_liq,:totale,:metodopagamento,:note)";
+        $query = "INSERT INTO `liquidazioni`(`sigla`, `data`, `importo`) VALUES (:sigla,:data_liq,:totale)";
         $stmt = $db->prepare($query);
         $stmt->bindParam('sigla', $sigla, PDO::PARAM_STR);
         $stmt->bindParam('data_liq', $data, PDO::PARAM_STR);
         $stmt->bindParam('totale', $totale, PDO::PARAM_STR);
-        $stmt->bindParam('metodopagamento', $metodopagamento, PDO::PARAM_STR);
-        $stmt->bindParam('note', $note, PDO::PARAM_STR);
         $stmt->execute();
         return $db->lastInsertId();
     } catch (PDOException $e) {
@@ -1880,6 +1878,29 @@ function updateFattureLiquidazione($id_liquidazione, $id_fatture)
         $stmt->bindParam('id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
         $stmt->bindParam('id_fatture', $id_fatture, PDO::PARAM_INT);
         $stmt->execute();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+//Funzione per recuperare le fatture liquidate ad un agente .
+function  getLiquidazione($id_liquidazione)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT  fatture.*,
+        (`imp_netto` * `provv_percent` / 100) AS provvigione,
+        fatture.id AS id_fatt,
+        clienti.nome AS nome_cliente
+         FROM `fatture`  INNER JOIN
+        agenti ON fatture.sigla = agenti.sigla
+    INNER JOIN
+        clienti ON fatture.id_cfic = clienti.id_cfic
+    WHERE `id_liquidazione`=:id_liquidazione";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
     } catch (PDOException $e) {
         echo "Error : " . $e->getMessage();
     }

@@ -450,18 +450,19 @@ $(function () {
 		$(document).on('click', '.cancellautente', function(e) {
 			e.preventDefault();
 			var datid = $(this).attr("data-id");
-			swal({
-					title: "Sei sicuro?",
-					text: "L'utente non potrà più essere recuperato!",
-					type: "warning",
-					showCancelButton: true,
-					showLoaderOnConfirm: true,
-					confirmButtonClass: "btn btn-danger",
-					confirmButtonText: "Si, cancella!",
-					closeOnConfirm: false
-				},
-				function() {
-	
+			Swal.fire({
+				title: "Sei sicuro?",
+				text: "L'utente non potrà più essere recuperato!",
+				icon: "warning",
+				showCancelButton: true,
+				showLoaderOnConfirm: true,
+				confirmButtonClass: "btn btn-danger",
+				confirmButtonText: "Si, cancella!",
+				cancelButtonText: "Annulla",
+				closeOnConfirm: false
+			}).then((result) => {
+				// Funzione di callback per la conferma
+				if (result.isConfirmed) {
 					setTimeout(function() {
 						$.ajax({
 							type: "POST",
@@ -471,11 +472,13 @@ $(function () {
 							},
 							success: function(data) {
 								$('#' + datid).closest("tr").remove();
-								swal("Cancellato!", "L'utente è stato cancellato.", "success");
+								Swal.fire("Cancellato!", "L'utente è stato cancellato.", "success");
 							}
 						});
 					}, 2000);
-				});
+				}
+			});
+			
 	
 			});
 		
@@ -841,34 +844,37 @@ $(document).on('click', '#agentesubmitButton', function(event) {
 $(document).on('click', '.cancellagente', function(e) {
 	e.preventDefault();
 	var datid = $(this).attr("data-id");
-	swal({
-			title: "Sei sicuro?",
-			text: "L'agente non potrà più essere recuperato!",
-			type: "warning",
-			showCancelButton: true,
-			showLoaderOnConfirm: true,
-			confirmButtonClass: "btn btn-danger",
-			confirmButtonText: "Si, cancella!",
-			cancelButtonText: "Annulla",
-			closeOnConfirm: false
-		},
-		function() {
+	Swal.fire({
+		title: "Sei sicuro?",
+		text: "L'agente non potrà più essere recuperato!",
+		icon: "warning",
+		showCancelButton: true,
+		showLoaderOnConfirm: true,
+		confirmButtonClass: "btn btn-danger",
+		confirmButtonText: "Si, cancella!",
+		cancelButtonText: "Annulla",
+		closeOnConfirm: false
+	}).then((result) => {
+		// Funzione di callback per la conferma
+		if (result.isConfirmed) {
 			setTimeout(function() {
 				$.ajax({
 					type: "POST",
 					url: "include/agente.php",
 					data: {
 						id: datid,
-						tipo:'del'
+						tipo: 'del'
 					},
 					success: function(data) {
 						$('#' + datid).closest("tr").remove();
-						swal("Cancellato!", "L'agente è stato cancellato.", "success");
+						Swal.fire("Cancellato!", "L'agente è stato cancellato.", "success");
 					}
 				});
 			}, 2000);
-		});
+		}
 	});
+	
+	    });
 
 	//abilita modifiche
 	$(document).on('click', '.abilitamodifiche', function(e) {
@@ -1105,8 +1111,8 @@ var prov1 = new BSTable("basic-edittable22",{
             data: {
                 id_fattura: fatture,
                 id_agente: id,
-                metodo_pagamento: metodo_pagamento,
-                note: note,
+                // metodo_pagamento: metodo_pagamento,
+                // note: note,
                 data_liquidazione: data_liquidazione,
                 tipo: 'liquida'
             },
@@ -1135,6 +1141,7 @@ var prov1 = new BSTable("basic-edittable22",{
             }
         });
     });
+
 
 	/**
 	 * *Liquidazione zona
@@ -1284,6 +1291,7 @@ $(document).on('click', '.vedi_scaduti', function(event) {
 			//Cambio il titolo del model
 			$('#modal-generico .modal-title').html('Fatture scadute');
 			$('#modal-generico .modal-body').html(response);
+			$('#modal-generico .modal-footer').html('');
 		}
 	});
 	$('#modal-generico').modal('show');
@@ -1309,6 +1317,7 @@ $(document).on('click', '.vedi-provincia', function(event) {
 			//Cambio il titolo del model
 			$('#modal-generico .modal-title').html('Clienti provincia ' + pv);
 			$('#modal-generico .modal-body').html(response);
+			$('#modal-generico .modal-footer').html('');
 		}
 	});
 	$('#modal-generico').modal('show');
@@ -1333,8 +1342,59 @@ $(document).on('click', '.vedi_scaduti_cliente', function(event) {
 			//Cambio il titolo del model
 			$('#modal-generico .modal-title').html('Fatture scadute cliente');
 			$('#modal-generico .modal-body').html(response);
+			$('#modal-generico .modal-footer').html('');
 		}
 	});
 	$('#modal-generico').modal('show');
 });
+
+//Se schiaccio sulla classe vediliquidazione Apro il model generico
+$(document).on('click', '.vediliquidazione', function(event) {
+	event.preventDefault();
+	var id_liquidazione = $(this).attr("data-id");
+	//Genero i dati tramite ajax
+	$.ajax({
+		type: "post",
+		url: "include/liquidazione.php",
+		data: {
+			tipo: 'vedi_liquidazione',
+			id_liquidazione: id_liquidazione
+		},
+		dataType: "html",
+		success: function(response) {
+			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+			//Cambio il titolo del model
+			$('#modal-generico .modal-title').html('Liquidazioni');
+			$('#modal-generico .modal-body').html(response);
+			//Cancello il footer del model
+			$('#modal-generico .modal-footer').html('');
+		}
+	});
+	$('#modal-generico').modal('show');
+}
+);
+	//Quando schiaccio sul bottone Un classe  nsreferenza Apro il model generico
+	$(document).on('click', '.nsreferenza', function(event) {
+		event.preventDefault();
+		//Leggo il data ID
+		var id_liquidazione = $(this).attr("data-id");
+		//Genero i dati tramite ajax
+		$.ajax({
+			type: "post",
+			url: "include/liquidazione.php",
+			data: {
+				tipo: 'referenza'
+			},
+			dataType: "html",
+			success: function(response) {
+				$('#modal-generico .modal-title').html('Ns. Referenza');
+				$('#modal-generico .modal-body').html(response);
+				//Aggiungo un foother al model
+				$('#modal-generico .modal-footer').html('<button class="btn btn-primary inserisci_referenza">Salva</button><button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>');
+				//Aggiungo il data-id di classe inserisci_referenza
+				$('.inserisci_referenza').attr('data-id', id_liquidazione);
+			}
+		});
+		$('#modal-generico').modal('show');
+	});
 });

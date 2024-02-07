@@ -469,7 +469,6 @@ $colors = ['#285cf7', '#f10075', '#8500ff', '#7987a1', '#74de00', '#ff5733', '#3
                                                         <tr>
                                                             <th class="wd-lg-50p">Provincia</th>
                                                             <th class="wd-lg-25p tx-right">Imponibile</th>
-
                                                             <th></th>
                                                         </tr>
                                                     </thead>
