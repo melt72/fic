@@ -117,6 +117,10 @@ $html = '
     .rtl table tr td:nth-child(2) {
         text-align: left;
     }
+
+    .scritte{
+        font-size: 13px;
+    }
     </style>
 </head>
 
@@ -131,37 +135,42 @@ $html = '
                 Data: ' . date('d/m/Y', strtotime($row['data'])) . '<br><br><br><br>
                 AGENZIA: <br>' . $row['nome_agente'] . '</td>
             </tr>
+
             <tr class="heading">
-                <td colspan="3">
-                Metodo di pagamento :  ';
-switch ($row['pagamento']) {
-    case '1':
-        $html .= ' Bonifico';
-        # code...
-        break;
-    case '2':
-        $html .= ' Assegno';
-        # code...
-        break;
-    case '3':
-        $html .= ' Contanti';
-        # code...
-        break;
-};
+                <td colspan="3"></td>
+                <td colspan="3">Totale pagamento : %importo_totale% €</td>
+            </tr>
 
-$html .= '
-</td>
+<tr><td  colspan="6"><br></td></tr>';
 
+if ($row['pagamento'] != '') {
+    $html .= '
+<tr class="heading">
 <td colspan="3">
-    Totale pagamento : %importo_totale% €
+Metodo di pagamento :  ';
+    switch ($row['pagamento']) {
+        case '1':
+            $html .= ' Bonifico';
+            # code...
+            break;
+        case '2':
+            $html .= ' Assegno';
+            # code...
+            break;
+        case '3':
+            $html .= ' Contanti';
+            # code...
+            break;
+    };
+    $html .= '
 </td>
 
-</tr>
+<td colspan="3">Referenza : ' . $row['note'] . '</td></tr>
 
+<tr class="item"><td><br></td><td></td></tr>';
+}
+$html .= '
 
-<tr>
-<td  colspan="6"><br></td>
-</tr>
 
 <tr class="heading">
     <td colspan="2">Zona</td>
@@ -231,13 +240,14 @@ foreach ($zone as $zona) {
     </tr>
 
 <tr class="heading">
-    <td colspan="2">Cliente</td>
-    <td>Fatt n</td>
-    <td>Data</td>
-    <td colspan="2">Imponibile Netto</td>
+    <td colspan="2" class="scritte">Cliente</td>
+    <td class="scritte">Fatt n</td>
+    <td class="scritte">Data</td>
+    <td colspan="2" class="scritte">Importo Fatt.</td>
+    <td colspan="2" class="scritte">Imponibile Netto</td>
 </tr>';
     try {
-        $query = "SELECT nome, `num_f`,`data_f`,`imp_netto` FROM `fatture` f INNER JOIN clienti c ON f.id_cfic=c.id_cfic INNER JOIN agenti_roma ag ON f.id_cfic=ag.id_cfic INNER JOIN zone_roma z ON ag.id_zona=z.id_zona WHERE f.id_liquidazione='$id_fattura' AND z.id_zona=:id_zona";
+        $query = "SELECT nome, `num_f`,`data_f`,`imp_tot` ,`imp_netto` FROM `fatture` f INNER JOIN clienti c ON f.id_cfic=c.id_cfic INNER JOIN agenti_roma ag ON f.id_cfic=ag.id_cfic INNER JOIN zone_roma z ON ag.id_zona=z.id_zona WHERE f.id_liquidazione='$id_fattura' AND z.id_zona=:id_zona";
         $stmt = $db->prepare($query);
         $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
         $stmt->execute();
@@ -245,10 +255,11 @@ foreach ($zone as $zona) {
         foreach ($dati as $row) {
             $html .= '
             <tr class="item">
-            <td colspan="2">' . $row['nome'] . '</td>
-            <td>' . $row['num_f'] . '</td>
-            <td>' . date('d/m/Y', strtotime($row['data_f'])) . '</td>
-            <td colspan="2">' . arrotondaEFormatta($row['imp_netto']) . '€</td>
+            <td colspan="2" class="scritte">' . $row['nome'] . '</td>
+            <td class="scritte">' . $row['num_f'] . '</td>
+            <td class="scritte">' . date('d/m/Y', strtotime($row['data_f'])) . '</td>
+            <td colspan="2" class="scritte">' . arrotondaEFormatta($row['imp_tot']) . '€</td>
+            <td colspan="2" class="scritte">' . arrotondaEFormatta($row['imp_netto']) . '€</td>
         </tr>';
         }
     } catch (PDOException $e) {

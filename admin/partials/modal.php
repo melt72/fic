@@ -225,7 +225,7 @@
 								<h5>IMPORTO AGENZIA: <span id="importo_liquidazione_ag"><?= isset($id_zona) ? arrotondaEFormatta($provvigione_totale2['b']) : '' ?></span> €</h5> -->
 							</div>
 						</div>
-						<div class="row  mg-b-20">
+						<!-- <div class="row  mg-b-20">
 							<div class="col-md-6">
 								<label for="metodo_pagamento">Metodo di pagamento</label>
 								<select class="form-select select2-no-search" name="metodo_pagamento" id="metodo_pagamento">
@@ -238,7 +238,7 @@
 							<div class="col-md-6"><label for="note">Note</label>
 								<input class="form-control" placeholder="Textarea" id="note" name="note"></input>
 							</div>
-						</div>
+						</div> -->
 
 						<div class="row">
 							<div class="col-md-12">

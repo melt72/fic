@@ -49,8 +49,8 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         case 'liquida_zona':
             $id = $_POST['id_fattura'];
             $sigla_agente = 'RSC';
-            $metodo_pagamento = $_POST['metodo_pagamento'];
-            $note = $_POST['note'];
+            // $metodo_pagamento = $_POST['metodo_pagamento'];
+            // $note = $_POST['note'];
             $data_liquidazione = $_POST['data_liquidazione'];
             $data_formato_originale = DateTime::createFromFormat('d/m/Y',  $data_liquidazione);
 
@@ -62,7 +62,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             // foreach ($id as $id_fattura) {
             //     $importo += importoliquidzione($id_fattura);
             // }
-            $id_liquidazione = setLiquidazione($sigla_agente, $data_formato_desiderato, $importo, $metodo_pagamento, $note);
+            $id_liquidazione = setLiquidazione($sigla_agente, $data_formato_desiderato, $importo);
             //aggiorno le fatture con l'id della liquidazione
             foreach ($id as $id_fattura) {
                 updateFattureLiquidazione($id_liquidazione, $id_fattura);
@@ -110,23 +110,73 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             </div>
         <?php
             break;
+        case 'vedi_liquidazione_roma': // Mostra i dettagli della liquidazione fatture che sono state liquidate per roma
+            $id_liquidazione = $_POST['id_liquidazione'];
+            $zone = getVediLiquidazioneZoneRoma($id_liquidazione); // Prendo tutte le zone
+        ?>
+            <table class="table table-bordered border text-nowrap mb-0" id="basic-edittable">
+                <thead>
+                    <tr>
+                        <th>Zona</th>
+                        <th>Prov Agente</th>
+                        <th>Prov Agenzia</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    foreach ($zone as $zona) {
+                    ?>
+                        <tr>
+                            <td><?= $zona['nome'] ?></td>
+                            <td><?= arrotondaEFormatta($zona['a']) ?> €</td>
+                            <td><?= arrotondaEFormatta($zona['b']) ?> €</td>
+                        </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+            </div> <!-- Tabella con le fatture da liquidare -->
+        <?php
+            break;
+
         case 'referenza':
+            $id_liquidazione = $_POST['id_liquidazione'];
+            $dati_liquidazione =  getDatiLiquidazione($id_liquidazione); // Prendo i dati della liquidazione
         ?>
             <div class="row  mg-b-20">
                 <div class="col-md-6">
                     <label for="metodo_pagamento">Metodo di pagamento</label>
-                    <select class="form-select select2-no-search" name="metodo_pagamento" id="metodo_pagamento">
+                    <select class="form-select select2-no-search" name="metodo_pagamento_agente" id="metodo_pagamento_agente">
                         <option value="">Scegli metodo</option>
-                        <option value="1">Bonifico</option>
-                        <option value="2">Assegno</option>
-                        <option value="3">Contanti</option>
+                        <option value="1" <?= $dati_liquidazione['pagamento'] == '1' ? ' selected' : '' ?>>Bonifico</option>
+                        <option value="2" <?= $dati_liquidazione['pagamento'] == '2' ? ' selected' : '' ?>>Assegno</option>
+                        <option value="3" <?= $dati_liquidazione['pagamento'] == '3' ? ' selected' : '' ?>>Contanti</option>
                     </select>
                 </div>
                 <div class="col-md-6"><label for="note">Note</label>
-                    <input class="form-control" placeholder="Eventuali note di liquidazione" id="note" name="note"></input>
+                    <input class="form-control" placeholder="Note di liquidazione" id="note_agente" name="note_agente" value="<?= $dati_liquidazione['note'] ?>"></input>
                 </div>
             </div>
 <?php
+            break;
+        case 'inserisci_referenza':
+            $id_liquidazione = $_POST['id_liquidazione'];
+            $metodo_pagamento = $_POST['metodo_pagamento'];
+            $note = $_POST['note'];
+            include(__DIR__ . '/../../include/configpdo.php');
+            try {
+                $query = "UPDATE `liquidazioni` SET`pagamento`=:metodo,`note`=:nota WHERE `id`=:id_liquidazione ";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':metodo', $metodo_pagamento, PDO::PARAM_STR);
+                $stmt->bindParam(':nota', $note, PDO::PARAM_STR);
+                $stmt->bindParam(':id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
+                $stmt->execute();
+            } catch (PDOException $e) {
+                echo "Error : " . $e->getMessage();
+            }
+            break;
         default:
             # code...
             break;

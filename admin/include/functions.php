@@ -1775,6 +1775,8 @@ function getTotaleLiquidazioneZoneRoma()
     return $array;
 }
 
+
+
 /**
  * *Funzione che calcola il totale della  della liquidazione per una zona
  */
@@ -1811,6 +1813,66 @@ function getTotaleLiquidazioneZona($id_zona)
     }
 }
 
+function getVediLiquidazioneZoneRoma($id_liquidazione)
+{
+    //Inizializzo un array complessivo
+    $array = array();
+
+    include(__DIR__ . '/../../include/configpdo.php');
+    $zone = get_zone(); //$zone è un array con tutte le zone
+    $totale_complessivo = 0;
+    $totale_a = 0;
+    $totale_b = 0;
+    foreach ($zone as $zona) {
+        $nome_zona = $zona['nome_zona'];
+        $id_zona = $zona['id_zona'];
+        $totale = 0; //totale della liquidazione
+        $a = 0; //totale della liquidazione per l'agente 
+        $b = 0; //totale della liquidazione per agenzia
+        try {
+            $query = "SELECT (`imp_netto` * 16 / 100) AS totale, provv_percent AS tipo FROM `fatture` INNER JOIN agenti_roma ON fatture.id_cfic=agenti_roma.id_cfic WHERE agenti_roma.id_zona = :id_zona AND id_liquidazione=:idliquidazione";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('idliquidazione', $id_liquidazione, PDO::PARAM_INT);
+            $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
+            $stmt->execute();
+            $dati =  $stmt->fetchAll();
+            foreach ($dati as $row) {
+                switch ($row['tipo']) { //tipo di provvigione 1=50% agente 2=100% agenzia 3=caso particolare di roma (50% agenzia e il restante ripartito tra le altre zone)
+                    case '1':
+                        $a += $row['totale'] / 2;
+                        $b += $row['totale'] / 2;
+                        break;
+                    case '2':
+                        $a += 0;
+                        $b += $row['totale'];
+                        break;
+                    case '3': //caso particolare di roma (50% agenzia e il restante ripartito tra le altre zone)
+                        $a += $row['totale'] / 2;
+                        $b += $row['totale'] / 2;
+                        break;
+                }
+                $totale += $row['totale'];
+            }
+            $totale_complessivo += $totale;
+            $totale_a += $a;
+            $totale_b += $b;
+            $array[$id_zona] = array(
+                'nome' => $nome_zona, //nome della zona
+                'totale' => $totale,
+                'a' => $a,
+                'b' => $b
+            );
+        } catch (PDOException $e) {
+            echo "Error : " . $e->getMessage();
+        }
+    }
+    // $array['totale_complessivo'] = array(
+    //     'totale' => $totale_complessivo,
+    //     'a' => $totale_a,
+    //     'b' => $totale_b
+    // );
+    return $array;
+}
 //Funzione che ricava la sigla dell'agente dal suo id
 function getSiglaAgente($id_agente)
 {
@@ -1863,6 +1925,25 @@ function setLiquidazione($sigla, $data, $totale)
         $stmt->bindParam('totale', $totale, PDO::PARAM_STR);
         $stmt->execute();
         return $db->lastInsertId();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+/**
+ * *Funzione Per recuperare i dati di una singola liquidazione
+ 
+ */
+
+function getDatiLiquidazione($id_liquidazione)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `liquidazioni` WHERE `id`=:id_liquidazione";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         echo "Error : " . $e->getMessage();
     }

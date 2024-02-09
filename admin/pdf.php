@@ -137,39 +137,39 @@ $html = '
                 Data: ' . $data . '<br><br><br><br>
                 AGENTE: <br>' . $nome_agente . '</td>
             </tr>
-            <tr class="heading">
-                <td colspan="3">
-                Metodo di pagamento :  ';
-switch ($row['pagamento']) {
-    case '1':
-        $html .= ' Bonifico';
-        # code...
-        break;
-    case '2':
-        $html .= ' Assegno';
-        # code...
-        break;
-    case '3':
-        $html .= ' Contanti';
-        # code...
-        break;
-};
+            <tr class="heading"><td colspan="3"></td>
 
-$html .= '
-</td>
+<td colspan="3">Totale pagamento : ' . arrotondaEFormatta($row['importo']) . ' €/td></tr>
+<tr class="item"><td><br></td><td></td></tr>';
 
+if ($row['pagamento'] != '') {
+    $html .= '
+<tr class="heading">
 <td colspan="3">
-    Totale pagamento : ' . arrotondaEFormatta($row['importo']) . ' €
+Metodo di pagamento :  ';
+    switch ($row['pagamento']) {
+        case '1':
+            $html .= ' Bonifico';
+            # code...
+            break;
+        case '2':
+            $html .= ' Assegno';
+            # code...
+            break;
+        case '3':
+            $html .= ' Contanti';
+            # code...
+            break;
+    };
+
+    $html .= '
 </td>
 
-</tr>
+<td colspan="3">Referenza : ' . $row['note'] . '</td></tr>
 
-
-<tr class="item">
-    <td><br></td>
-    <td></td>
-</tr>
-
+<tr class="item"><td><br></td><td></td></tr>';
+}
+$html .= '
 <tr class="heading">
     <td colspan="2" class="scritte">
         Cliente

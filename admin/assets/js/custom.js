@@ -1243,8 +1243,8 @@ $(document).on('click', '.liquida_provv_roma', function(e) {
 		type: 'POST',
 		data: {
 			id_fattura: fatture,
-			metodo_pagamento: metodo_pagamento,
-			note: note,
+			// metodo_pagamento: metodo_pagamento,
+			// note: note,
 			data_liquidazione: data_liquidazione,
 			tipo: 'liquida_zona'
 		},
@@ -1258,13 +1258,13 @@ $(document).on('click', '.liquida_provv_roma', function(e) {
 				text: 'Liquidazione registrata!',
 				icon: 'success',
 				showCancelButton: true,
-				confirmButtonText: 'Vedi PDF',
+				confirmButtonText: 'Vedi Velina',
 				cancelButtonText: 'Esci',
 				confirmButtonColor: '#57a94f'
 			}).then((result) => {
 				if (result.isConfirmed) {
 					//apro  una nuova scheda con il pdf
-					window.open('pdf.php?id_liquidazione=' + id_fattura, '_blank');
+					window.open('pdf_roma.php?id_liquidazione=' + id_fattura, '_blank');
 				}
 			});
 		},
@@ -1373,6 +1373,34 @@ $(document).on('click', '.vediliquidazione', function(event) {
 	$('#modal-generico').modal('show');
 }
 );
+
+//Quando schiaccio sulla classe vediliquidazioneroma Apro il model generico
+$(document).on('click', '.vediliquidazioneroma', function(event) {
+	event.preventDefault();
+	var id_liquidazione = $(this).attr("data-id");
+	//Genero i dati tramite ajax
+	$.ajax({
+		type: "post",
+		url: "include/liquidazione.php",
+		data: {
+			tipo: 'vedi_liquidazione_roma',
+			id_liquidazione: id_liquidazione
+		},
+		dataType: "html",
+		success: function(response) {
+			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+			//Cambio il titolo del model
+			$('#modal-generico .modal-title').html('Liquidazioni');
+			$('#modal-generico .modal-body').html(response);
+			//Cancello il footer del model
+			$('#modal-generico .modal-footer').html('');
+		}
+	});
+	$('#modal-generico').modal('show');
+}
+);
+
+
 	//Quando schiaccio sul bottone Un classe  nsreferenza Apro il model generico
 	$(document).on('click', '.nsreferenza', function(event) {
 		event.preventDefault();
@@ -1383,6 +1411,7 @@ $(document).on('click', '.vediliquidazione', function(event) {
 			type: "post",
 			url: "include/liquidazione.php",
 			data: {
+				id_liquidazione: id_liquidazione,
 				tipo: 'referenza'
 			},
 			dataType: "html",
@@ -1390,11 +1419,46 @@ $(document).on('click', '.vediliquidazione', function(event) {
 				$('#modal-generico .modal-title').html('Ns. Referenza');
 				$('#modal-generico .modal-body').html(response);
 				//Aggiungo un foother al model
-				$('#modal-generico .modal-footer').html('<button class="btn btn-primary inserisci_referenza">Salva</button><button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>');
+				$('#modal-generico .modal-footer').html('<button class="btn btn-primary inserisci_referenza">Salva</button><button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Chiudi</button>');
 				//Aggiungo il data-id di classe inserisci_referenza
 				$('.inserisci_referenza').attr('data-id', id_liquidazione);
 			}
 		});
 		$('#modal-generico').modal('show');
 	});
+
+	//Quando schiaccio sul bottone Un classe  inserisci_referenza Invio i dati tramite ajax
+	$(document).on('click', '.inserisci_referenza', function(event) {
+		event.preventDefault();
+		//Leggo il data ID
+		var id_liquidazione = $(this).attr("data-id");
+
+		//Genero i dati tramite ajax
+		$.ajax({
+			type: "post",
+			url: "include/liquidazione.php",
+			data: {
+				tipo: 'inserisci_referenza',
+				id_liquidazione: id_liquidazione,
+				metodo_pagamento: $('#metodo_pagamento_agente').val(),
+				note: $('#note_agente').val()
+			},
+			dataType: "html",
+			success: function(response) {
+				console.log(response);
+				//Chiudo il model
+				$('#modal-generico').modal('hide');
+				//Success Message
+				Swal.fire({
+					title: "Well done!",
+					text: 'Referenza inserita!',
+					icon: 'success',
+					showCancelButton: false,
+					confirmButtonText: 'Ok',
+					confirmButtonColor: '#57a94f'
+				});
+			}
+		});
+	});
+
 });
