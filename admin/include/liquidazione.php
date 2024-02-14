@@ -7,9 +7,6 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         case 'liquida':
             $id = $_POST['id_fattura'];
             $id_agente = $_POST['id_agente'];
-
-            $metodo_pagamento = $_POST['metodo_pagamento'];
-            $note = $_POST['note'];
             $data_liquidazione = $_POST['data_liquidazione'];
             $data_formato_originale = DateTime::createFromFormat('d/m/Y',  $data_liquidazione);
 
@@ -159,7 +156,75 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                     <input class="form-control" placeholder="Note di liquidazione" id="note_agente" name="note_agente" value="<?= $dati_liquidazione['note'] ?>"></input>
                 </div>
             </div>
-<?php
+        <?php
+            break;
+        case 'referenzaroma':
+            $id_liquidazione = $_POST['id_liquidazione'];
+            //  $dati_liquidazione =  getDatiLiquidazione($id_liquidazione); // Prendo i dati della liquidazione
+        ?><div class="row">
+                <div class="col-md-12 text-end mg-b-20">
+                    <button class="btn btn-primary btn-sm nuova-referenza">Nuova referenza</button>
+                </div>
+            </div>
+            <div id="inserimentoroma" style="display: none;">
+                <div class="row mg-b-20">
+                    <div class="col-md-6">
+                        <label for="data">Data</label>
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <i class="typcn typcn-calendar-outline tx-24 lh--9 op-6"></i>
+                            </div>
+                            <input class="form-control" id="data_liquidazione_zona2" name="data_liquidazione_zona2" placeholder="MM/DD/YYYY" type="text" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6"><label for="nome_agente_roma">Riferimento Nome</label>
+                        <input class="form-control" placeholder="Agente o Zona o Referente" id="nome_agente_roma" name="nome_agente_roma"></input>
+                    </div>
+                </div>
+                <div class="row mg-b-20">
+                    <div class="col-md-6">
+                        <label for="metodo_pagamento">Metodo di pagamento</label>
+                        <select class="form-select select2-no-search" name="metodo_pagamento_agente" id="metodo_pagamento_agente">
+                            <option value="">Scegli metodo</option>
+                            <option value="1">Bonifico</option>
+                            <option value="2">Assegno</option>
+                            <option value="3">Contanti</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6"><label for="note">Note</label>
+                        <input class="form-control" placeholder="Note di liquidazione" id="note_agente" name="note_agente"></input>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-center"><button class="btn btn-primary inserisci_referenza_roma">Inserisci Referenza</button></div>
+                </div>
+            </div>
+            <?php
+            $dati = getNoteLiquidazioneRoma($id_liquidazione);
+            if (!empty($dati)) { ?>
+                <div class="row mg-b-20">
+                    <div class="table-responsive country-table">
+                        <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                            <tbody id="dati_liquida_roma">
+                                <?php
+                                foreach ($dati as $dato) {
+                                ?>
+                                    <tr>
+                                        <td><?= date('d/m/Y', strtotime($dato['data_pagamento'])) ?></td>
+                                        <td><?= strtoupper($dato['nome_liquidaroma']) ?></td>
+                                        <td class="tx-right tx-medium tx-inverse">
+                                            <?= getMetodoPagamento($dato['metodo']); ?>
+                                        </td>
+                                        <td class="tx-right tx-medium tx-inverse"> <?= $dato['note_liquidaroma']; ?></td>
+                                    </tr>
+                                <?php
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php }
             break;
         case 'inserisci_referenza':
             $id_liquidazione = $_POST['id_liquidazione'];
@@ -175,6 +240,48 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                 $stmt->execute();
             } catch (PDOException $e) {
                 echo "Error : " . $e->getMessage();
+            }
+            break;
+
+        case 'inserisci_referenza_roma':
+            $id_liquidazione = $_POST['id_liquidazione'];
+            $metodo_pagamento = $_POST['metodo_pagamento'];
+            $nome_agente = $_POST['nome_agente'];
+            $data_referenza = $_POST['data_referenza'];
+            //Trasformo la data in formato per il db
+            $data_formato_originale = DateTime::createFromFormat('d/m/Y',  $data_referenza);
+            $data_formato_desiderato = $data_formato_originale->format('Y-m-d');
+
+            $note = $_POST['note'];
+            include(__DIR__ . '/../../include/configpdo.php');
+            try {
+                $query = "INSERT INTO `liquidazioni_roma`(`id_liquidazione`, `nome_liquidaroma`, `metodo`, `note_liquidaroma`, `data_pagamento`) VALUES (:id_liquidazione, :agente, :metodo,:nota, :data_ref) ";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
+                $stmt->bindParam(':agente', $nome_agente, PDO::PARAM_STR);
+                $stmt->bindParam(':metodo', $metodo_pagamento, PDO::PARAM_STR);
+                $stmt->bindParam(':nota', $note, PDO::PARAM_STR);
+                $stmt->bindParam(':data_ref',  $data_formato_desiderato, PDO::PARAM_STR);
+                $stmt->execute();
+            } catch (PDOException $e) {
+                echo "Error : " . $e->getMessage();
+            }
+            $dati = getNoteLiquidazioneRoma($id_liquidazione);
+            if (!empty($dati)) { ?>
+
+                <?php
+                foreach ($dati as $dato) {
+                ?>
+                    <tr>
+                        <td><?= date('d/m/Y', strtotime($dato['data_pagamento'])) ?></td>
+                        <td><?= strtoupper($dato['nome_liquidaroma']) ?></td>
+                        <td class="tx-right tx-medium tx-inverse">
+                            <?= getMetodoPagamento($dato['metodo']); ?>
+                        </td>
+                        <td class="tx-right tx-medium tx-inverse"> <?= $dato['note_liquidaroma']; ?></td>
+                    </tr>
+<?php
+                }
             }
             break;
         default:

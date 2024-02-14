@@ -1117,7 +1117,6 @@ var prov1 = new BSTable("basic-edittable22",{
                 tipo: 'liquida'
             },
             success: function(response) {
-                var id_fattura = response;
                 //Chiudo il model
                 $('#modal-liquidazione').modal('hide');
                 //Success Message
@@ -1126,13 +1125,14 @@ var prov1 = new BSTable("basic-edittable22",{
                     text: 'Liquidazione registrata!',
                     icon: 'success',
                     showCancelButton: true,
-                    confirmButtonText: 'Vedi PDF',
+                    confirmButtonText: 'Vedi Velina PDF',
                     cancelButtonText: 'Esci',
                     confirmButtonColor: '#57a94f'
                 }).then((result) => {
                     if (result.isConfirmed) {
+						console.log('aa'+ response);
                         //apro  una nuova scheda con il pdf
-                        window.open('pdf.php?id_liquidazione=' + id_fattura, '_blank');
+						window.open('pdf.php?id_liquidazione=' + response, '_blank');
                     }
                 });
             },
@@ -1213,38 +1213,22 @@ var prov1 = new BSTable("basic-edittable22",{
         button.removeClass(removeIconClass).addClass(addIconClass);
     }
 
-    function calcolaSommaImporti() {
-        var sommaImporti = 0;
-
-        $('.inclusa_zona').each(function() {
-            var importo = parseFloat($(this).data('importo')) || 0;
-            sommaImporti += importo;
-        });
-
-        return sommaImporti;
-    }
-
 //Quando schiaccio sul bottone liquida_provv_roma Invio i dati tramite ajax
 $(document).on('click', '.liquida_provv_roma', function(e) {
 	e.preventDefault();
 	//Disabilito il bottone
 	$('.liquida_provv_roma').prop('disabled', true);
-	var metodo_pagamento = $('#metodo_pagamento').val();
-	var note = $('#note').val();
 	var data_liquidazione = $('#data_liquidazione_zona').val();
 	var fatture = [];
 	$('.inclusa_zona').each(function() {
 		var id_fattura = $(this).data('id');
 		fatture.push(id_fattura);
 	});
-	console.log(fatture);
 	$.ajax({
 		url: 'include/liquidazione.php',
 		type: 'POST',
 		data: {
 			id_fattura: fatture,
-			// metodo_pagamento: metodo_pagamento,
-			// note: note,
 			data_liquidazione: data_liquidazione,
 			tipo: 'liquida_zona'
 		},
@@ -1427,6 +1411,50 @@ $(document).on('click', '.vediliquidazioneroma', function(event) {
 		$('#modal-generico').modal('show');
 	});
 
+	//Modal Per inserire le referenze di Roma
+		$(document).on('click', '.nsreferenzaroma', function(event) {
+		event.preventDefault();
+		//Leggo il data ID
+		var id_liquidazione = $(this).attr("data-id");
+		//Genero i dati tramite ajax
+		$.ajax({
+			type: "post",
+			url: "include/liquidazione.php",
+			data: {
+				id_liquidazione: id_liquidazione,
+				tipo: 'referenzaroma'
+			},
+			dataType: "html",
+			success: function(response) {
+				$('#modal-generico .modal-title').html('Ns. Referenza');
+				$('#modal-generico .modal-body').html(response);
+				$('#data_liquidazione_zona2').bootstrapdatepicker({
+					format: "dd/mm/yyyy",
+					viewMode: "date",
+					multidate: false,
+					multidateSeparator: "/",
+				})
+			
+				var today = new Date();
+				var dd = today.getDate();
+				var mm = today.getMonth() + 1; //Gennaio è 0!
+				var yyyy = today.getFullYear();
+				if (dd < 10) {
+					dd = '0' + dd
+				}
+				if (mm < 10) {
+					mm = '0' + mm
+				}
+				today = dd + '/' + mm + '/' + yyyy;
+				$('#data_liquidazione_zona2').val(today);
+				//Aggiungo un foother al model
+				$('#modal-generico .modal-footer').html('<button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Chiudi</button>');
+				//Aggiungo il data-id di classe inserisci_referenza
+				$('.inserisci_referenza_roma').attr('data-id', id_liquidazione);
+			}
+		});
+		$('#modal-generico').modal('show');
+	});
 	//Quando schiaccio sul bottone Un classe  inserisci_referenza Invio i dati tramite ajax
 	$(document).on('click', '.inserisci_referenza', function(event) {
 		event.preventDefault();
@@ -1457,6 +1485,44 @@ $(document).on('click', '.vediliquidazioneroma', function(event) {
 					confirmButtonText: 'Ok',
 					confirmButtonColor: '#57a94f'
 				});
+			}
+		});
+	});
+
+
+
+	$(document).on('click', '.inserisci_referenza_roma', function(event) {
+		event.preventDefault();
+		//Leggo il data ID
+		var id_liquidazione = $(this).attr("data-id");
+
+		//Genero i dati tramite ajax
+		$.ajax({
+			type: "post",
+			url: "include/liquidazione.php",
+			data: {
+				tipo: 'inserisci_referenza_roma',
+				id_liquidazione: id_liquidazione,
+				nome_agente: $('#nome_agente_roma').val(),
+				data_referenza: $('#data_liquidazione_zona2').val(),
+				metodo_pagamento: $('#metodo_pagamento_agente').val(),
+				note: $('#note_agente').val()
+			},
+			dataType: "html",
+			success: function(response) {
+				$('#inserimentoroma').hide();
+				$('#dati_liquida_roma').html(response);
+				//Chiudo il model
+				// $('#modal-generico').modal('hide');
+				//Success Message
+				// Swal.fire({
+				// 	title: "Well done!",
+				// 	text: 'Referenza inserita!',
+				// 	icon: 'success',
+				// 	showCancelButton: false,
+				// 	confirmButtonText: 'Ok',
+				// 	confirmButtonColor: '#57a94f'
+				// });
 			}
 		});
 	});

@@ -53,7 +53,7 @@
 <script src="assets/js/jquery.vmap.sampledata.js"></script> -->
 <script src="assets/plugins/material-inputs/materialize-inputs.jquery.js"></script>
 <!-- custom js -->
-<script src="assets/js/custom.js?ver=341551446"></script>
+<script src="assets/js/custom.js?ver=aa3443"></script>
 
 <!-- switcher-styles js -->
 <script src="assets/js/swither-styles.js"></script>

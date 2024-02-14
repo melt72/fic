@@ -224,7 +224,7 @@ include 'partials/header.php';
                                                                                     <td>
 
                                                                                         <button class="btn btn-primary btn-sm vediliquidazioneroma" data-id="<?= $liquidazione['id'] ?>"><i class="fe fe-eye" data-bs-toggle="tooltip" title="" data-bs-original-title="fe fe-eye" aria-label="fe fe-eye"></i></button>
-                                                                                        <button class="btn btn-secondary btn-sm nsreferenza" data-id="<?= $liquidazione['id'] ?>"><i class="fe fe-edit-3" data-bs-toggle="tooltip" title="" data-bs-original-title="fe fe-edit-3" aria-label="fe fe-edit-3"></i></button>
+                                                                                        <button class="btn btn-secondary btn-sm nsreferenzaroma" data-id="<?= $liquidazione['id'] ?>"><i class="fe fe-edit-3" data-bs-toggle="tooltip" title="" data-bs-original-title="fe fe-edit-3" aria-label="fe fe-edit-3"></i></button>
                                                                                         <a href="pdf_roma.php?id_liquidazione=<?= $liquidazione['id'] ?>" class="btn btn-warning btn-sm" target="_blank"><i class="fe fe-file-text"></i></a>
                                                                                     </td>
                                                                                 </tr>
@@ -374,4 +374,9 @@ include 'partials/header.php';
 
         return sommaImporti;
     }
+
+    //Quando clicco su una .nuova-refereza mostro il div inserimentoroma
+    $(document).on('click', '.nuova-referenza', function() {
+        $('#inserimentoroma').show();
+    });
 </script>

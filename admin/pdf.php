@@ -139,7 +139,7 @@ $html = '
             </tr>
             <tr class="heading"><td colspan="3"></td>
 
-<td colspan="3">Totale pagamento : ' . arrotondaEFormatta($row['importo']) . ' €/td></tr>
+<td colspan="3">Totale pagamento : ' . arrotondaEFormatta($row['importo']) . ' €</td></tr>
 <tr class="item"><td><br></td><td></td></tr>';
 
 if ($row['pagamento'] != '') {

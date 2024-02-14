@@ -1948,6 +1948,20 @@ function getDatiLiquidazione($id_liquidazione)
         echo "Error : " . $e->getMessage();
     }
 }
+//Funzione per recuperare le note di liquidazione per Roma
+function getNoteLiquidazioneRoma($id_liquidazione)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `liquidazioni_roma` WHERE `id_liquidazione`=:id_liquidazione";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam('id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
 
 //  Funzione che aggiorna le fatture con l'id della liquidazione
 function updateFattureLiquidazione($id_liquidazione, $id_fatture)

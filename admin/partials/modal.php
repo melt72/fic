@@ -136,20 +136,6 @@
 								<h2>IMPORTO: <span id="importo_liquidazione"><?= isset($id_agente) ? arrotondaEFormatta(getTotaleLiquidazioneAgente($id_agente)) : '' ?></span> €</h2>
 							</div>
 						</div>
-						<!-- <div class="row  mg-b-20">
-							<div class="col-md-6">
-								<label for="metodo_pagamento">Metodo di pagamento</label>
-								<select class="form-select select2-no-search" name="metodo_pagamento" id="metodo_pagamento">
-									<option value="">Scegli metodo</option>
-									<option value="1">Bonifico</option>
-									<option value="2">Assegno</option>
-									<option value="3">Contanti</option>
-								</select>
-							</div>
-							<div class="col-md-6"><label for="note">Note</label>
-								<input class="form-control" placeholder="Eventuali note di liquidazione" id="note" name="note"></input>
-							</div>
-						</div> -->
 
 						<div class="row">
 							<div class="col-md-12">

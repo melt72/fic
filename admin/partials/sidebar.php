@@ -89,6 +89,7 @@
                                         <div class="tab-pane tab-content-show active" id="side25">
                                             <ul class="sidemenu-list">
                                                 <li><a class="slide-item" href="lista_fatture.php">Lista Fatture</a></li>
+                                                <li><a class="slide-item" href="aggiorna.php">Aggiorna Dati</a></li>
                                             </ul>
                                         </div>
                                     </div>
