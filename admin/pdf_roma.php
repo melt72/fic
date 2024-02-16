@@ -138,37 +138,53 @@ $html = '
 
             <tr class="heading">
                 <td colspan="3"></td>
-                <td colspan="3">Totale pagamento : %importo_totale% €</td>
+                <td colspan="3"></td>
             </tr>
 
 <tr><td  colspan="6"><br></td></tr>';
+// Per Roma controllo Nella tabella liquidazione Roma se è presente un pagamento
 
-if ($row['pagamento'] != '') {
-    $html .= '
-<tr class="heading">
-<td colspan="3">
-Metodo di pagamento :  ';
-    switch ($row['pagamento']) {
-        case '1':
-            $html .= ' Bonifico';
-            # code...
-            break;
-        case '2':
-            $html .= ' Assegno';
-            # code...
-            break;
-        case '3':
-            $html .= ' Contanti';
-            # code...
-            break;
-    };
-    $html .= '
-</td>
+try {
+    $query = "SELECT * FROM `liquidazioni_roma` WHERE `id_liquidazione`=:id_liquidazione";
+    $stmt = $db->prepare($query);
+    $stmt->bindParam('id_liquidazione', $id_fattura, PDO::PARAM_INT);
+    $stmt->execute();
+    $dati   = $stmt->fetchAll();
+    if (!empty($dati)) {
+        foreach ($dati as $rowroma) {
 
-<td colspan="3">Referenza : ' . $row['note'] . '</td></tr>
-
-<tr class="item"><td><br></td><td></td></tr>';
+            $html .= '
+            <tr class="heading">
+                <td>' . date('d/m/Y', strtotime($rowroma['data_pagamento'])) . '</td>
+                <td colspan="2">' . $rowroma['nome_liquidaroma'] . '</td>
+                <td>' . arrotondaEFormatta($rowroma['importo'])  . '€</td>
+                <td>';
+            switch ($rowroma['metodo']) {
+                case '1':
+                    $html .= ' Bonifico';
+                    # code...
+                    break;
+                case '2':
+                    $html .= ' Assegno';
+                    # code...
+                    break;
+                case '3':
+                    $html .= ' Contanti';
+                    # code...
+                    break;
+            };
+            $html .= '
+            </td>
+            
+            <td>' . $rowroma['note_liquidaroma'] . '</td></tr>';
+        }
+        $html .= '<tr class="item"><td><br></td><td></td></tr>';
+    }
+} catch (PDOException $e) {
+    echo "Error : " . $e->getMessage();
 }
+
+
 $html .= '
 
 
@@ -277,13 +293,14 @@ $html .= '
 
 </html>
 ';
-$html = str_replace('%importo_totale%', arrotondaEFormatta($totale_complessivo), $html);
+// $html = str_replace('%importo_totale%', arrotondaEFormatta($totale_complessivo), $html);
 
-require_once 'assets/vendor/autoload.php';
+// require_once 'assets/vendor/autoload.php';
 
 
-$mpdf = new \Mpdf\Mpdf(['mode' => 'c']);
+// $mpdf = new \Mpdf\Mpdf(['mode' => 'c']);
 
-$mpdf->WriteHTML($html);
-$file_name = 'ricevuta.pdf';
-$mpdf->Output($file_name, 'I');
+// $mpdf->WriteHTML($html);
+// $file_name = 'ricevuta.pdf';
+// $mpdf->Output($file_name, 'I');
+echo $html;

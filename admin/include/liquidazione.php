@@ -177,8 +177,13 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                             <input class="form-control" id="data_liquidazione_zona2" name="data_liquidazione_zona2" placeholder="MM/DD/YYYY" type="text" required>
                         </div>
                     </div>
-                    <div class="col-md-6"><label for="nome_agente_roma">Riferimento Nome</label>
-                        <input class="form-control" placeholder="Agente o Zona o Referente" id="nome_agente_roma" name="nome_agente_roma"></input>
+                    <div class="col-md-6"><label for="importo_roma">Importo</label>
+                        <input class="form-control" type="number" placeholder="Agente o Zona o Referente" id="importo_roma" name="importo_roma"></input>
+                    </div>
+                </div>
+                <div class="row mg-b-20">
+                    <div class="col-md-12><label for=" nome_agente_roma">Riferimento Nome</label>
+                        <input class="form-control" placeholder="Agente o Zona o Referente" id="nome_agente_roma" name="nome_agente_roma" type="text"></input>
                     </div>
                 </div>
                 <div class="row mg-b-20">
@@ -212,6 +217,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                                     <tr>
                                         <td><?= date('d/m/Y', strtotime($dato['data_pagamento'])) ?></td>
                                         <td><?= strtoupper($dato['nome_liquidaroma']) ?></td>
+                                        <td><?= arrotondaEFormatta($dato['importo'])  ?> €</td>
                                         <td class="tx-right tx-medium tx-inverse">
                                             <?= getMetodoPagamento($dato['metodo']); ?>
                                         </td>
@@ -248,6 +254,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             $metodo_pagamento = $_POST['metodo_pagamento'];
             $nome_agente = $_POST['nome_agente'];
             $data_referenza = $_POST['data_referenza'];
+            $importo = $_POST['importo'];
             //Trasformo la data in formato per il db
             $data_formato_originale = DateTime::createFromFormat('d/m/Y',  $data_referenza);
             $data_formato_desiderato = $data_formato_originale->format('Y-m-d');
@@ -255,11 +262,12 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             $note = $_POST['note'];
             include(__DIR__ . '/../../include/configpdo.php');
             try {
-                $query = "INSERT INTO `liquidazioni_roma`(`id_liquidazione`, `nome_liquidaroma`, `metodo`, `note_liquidaroma`, `data_pagamento`) VALUES (:id_liquidazione, :agente, :metodo,:nota, :data_ref) ";
+                $query = "INSERT INTO `liquidazioni_roma`(`id_liquidazione`, `nome_liquidaroma`, `metodo`, `importo`, `note_liquidaroma`, `data_pagamento`) VALUES (:id_liquidazione, :agente, :metodo, :importo, :nota, :data_ref) ";
                 $stmt = $db->prepare($query);
                 $stmt->bindParam(':id_liquidazione', $id_liquidazione, PDO::PARAM_INT);
                 $stmt->bindParam(':agente', $nome_agente, PDO::PARAM_STR);
                 $stmt->bindParam(':metodo', $metodo_pagamento, PDO::PARAM_STR);
+                $stmt->bindParam(':importo', $importo, PDO::PARAM_STR);
                 $stmt->bindParam(':nota', $note, PDO::PARAM_STR);
                 $stmt->bindParam(':data_ref',  $data_formato_desiderato, PDO::PARAM_STR);
                 $stmt->execute();
@@ -275,6 +283,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                     <tr>
                         <td><?= date('d/m/Y', strtotime($dato['data_pagamento'])) ?></td>
                         <td><?= strtoupper($dato['nome_liquidaroma']) ?></td>
+                        <td><?= arrotondaEFormatta($dato['importo'])  ?> €</td>
                         <td class="tx-right tx-medium tx-inverse">
                             <?= getMetodoPagamento($dato['metodo']); ?>
                         </td>

@@ -1506,6 +1506,7 @@ $(document).on('click', '.vediliquidazioneroma', function(event) {
 				nome_agente: $('#nome_agente_roma').val(),
 				data_referenza: $('#data_liquidazione_zona2').val(),
 				metodo_pagamento: $('#metodo_pagamento_agente').val(),
+				importo: $('#importo_roma').val(),
 				note: $('#note_agente').val()
 			},
 			dataType: "html",
