@@ -295,12 +295,11 @@ $html .= '
 ';
 // $html = str_replace('%importo_totale%', arrotondaEFormatta($totale_complessivo), $html);
 
-// require_once 'assets/vendor/autoload.php';
+require_once 'assets/vendor/autoload.php';
 
 
-// $mpdf = new \Mpdf\Mpdf(['mode' => 'c']);
+$mpdf = new \Mpdf\Mpdf(['mode' => 'c']);
 
-// $mpdf->WriteHTML($html);
-// $file_name = 'ricevuta.pdf';
-// $mpdf->Output($file_name, 'I');
-echo $html;
+$mpdf->WriteHTML($html);
+$file_name = 'Velina_RSC.pdf';
+$mpdf->Output($file_name, 'I');
