@@ -131,8 +131,14 @@ switch ($counter) {
             $prima_parte = $parti[0];
             $provv_percent = get_percentuale($prima_parte, $cliente);
             $status = $fattura['status'];
+            if (($status == '') || ($status == null)) {
+                $status = 'not_paid';
+            }
             $data = $fattura['data'];
             $data_scadenza = $fattura['data_scadenza'];
+            if (($data_scadenza == '') || ($data_scadenza == null)) {
+                $data_scadenza = $data;
+            }
             $data_pagamento = $fattura['data_pagamento'];
 
             //Controllo che la fattura non sia già stata inserita nel database
@@ -161,7 +167,7 @@ switch ($counter) {
                 echo 'Aggiunta fattura n. ' . $numero . '<br>';
                 // Accedi ai prodotti
                 foreach ($fattura['prodotti'] as $prodotto) {
-                    if (($prodotto['cod_prodotto'] == null) || ($prodotto['cod_prodotto'] == '')) {
+                    if (($prodotto['id_prodotto'] == null) || ($prodotto['id_prodotto'] == '')) {
                         //Non cè il codice prodotto perché o è stato cancellato o è stato aggiunto manualmente,Controllo quindi se nella lista prodotti è presente un prodotto con lo stesso nome
                         $sql = "SELECT * FROM lista_prodotti WHERE nome_prodotto = :nome";
                         $stmt = $db->prepare($sql);
@@ -170,7 +176,7 @@ switch ($counter) {
                         $result = $stmt->fetch(PDO::FETCH_ASSOC);
                         if ($result) {
                             //se il prodotto è presente nella lista prodotti allora inserisco il codice prodotto nella fattura
-                            $prodotto['cod_prodotto'] = $result['prod_id'];
+                            $prodotto['id_prodotto'] = $result['prod_id'];
                         } else {
                             //se il prodotto non è presente nella lista prodotti allora lo inserisco nella lista prodotti e inserisco il codice prodotto nella fattura
 
@@ -181,14 +187,15 @@ switch ($counter) {
                                 $tipo = 'bianco';
                             }
                             $codice_prodotto = '000' . PasswordCasuale(6, 'num');
-                            $sql = "INSERT INTO lista_prodotti (prod_id, nome_prodotto , varieta,tipo) VALUES (:codprod,:nome, :varieta, :tipo)";
+                            $sql = "INSERT INTO lista_prodotti (cod_prod,prod_id, nome_prodotto , varieta,tipo) VALUES (:codprod,:idprod,:nome, :varieta, :tipo)";
                             $stmt = $db->prepare($sql);
+                            $stmt->bindParam('codprod', $prodotto['cod_prodotto'], PDO::PARAM_INT);
                             $stmt->bindParam('nome', $prodotto['nome_prodotto'], PDO::PARAM_STR);
-                            $stmt->bindParam('codprod', $codice_prodotto, PDO::PARAM_INT);
+                            $stmt->bindParam('idprod', $codice_prodotto, PDO::PARAM_INT);
                             $stmt->bindParam('varieta', $varieta, PDO::PARAM_STR);
                             $stmt->bindParam('tipo', $tipo, PDO::PARAM_STR);
                             $stmt->execute();
-                            $prodotto['cod_prodotto'] = $codice_prodotto;
+                            $prodotto['id_prodotto'] = $codice_prodotto;
                         }
 
                         // $prodotto['cod_prodotto'] = 0;

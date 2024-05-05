@@ -3,7 +3,13 @@ include 'partials/headerarea.php';
 include 'partials/header.php';
 if (isset($_GET['c'])) {
     $id_del_cliente = $_GET['c'];
+
     $dati_cliente = getClienteById($id_del_cliente);
+    if (isset($_GET['a'])) {
+        $annoricerca = $_GET['a'];
+    } else {
+        $annoricerca = getAnnoRecente();
+    }
 } else {
     $dati_cliente = '';
 }
@@ -178,6 +184,22 @@ if (isset($_GET['c'])) {
                             </div>
                         </div>
                         <!-- row closed -->
+                        <?php
+                        if (NdcCliente($id_del_cliente)) {
+
+                        ?>
+                            <div class="row row-sm">
+                                <div class="col-sm-12 col-md-12">
+                                    <div class="alert alert-solid-warning" role="alert">
+                                        <button aria-label="Close" class="close" data-bs-dismiss="alert" type="button">
+                                            <span aria-hidden="true">×</span></button>
+                                        <strong>Warning!</strong> Il valore degli imponibili è stato rettificato dall'emissione di note di credito
+                                    </div>
+                                </div>
+                            </div>
+                        <?php
+                        }
+                        ?>
                         <div class="row row-sm">
                             <div class="col-md-12 col-lg-12 col-xl-12">
                                 <div class="card">
@@ -210,8 +232,37 @@ if (isset($_GET['c'])) {
                                 </div>
                             </div>
                         </div>
+                        <div class="breadcrumb-header justify-content-between">
+                            <div class="left-content">
+                                <div>
+                                    <h2 class="main-content-title tx-24 mg-b-1 mg-b-lg-1">Analisi Vini</h2>
+                                </div>
+                            </div>
+                            <div class="d-flex my-xl-auto right-content align-items-center">
+                                <?php
+                                $anni_disponibili = getAnniFatture();
+                                ?>
+                                <div class="mb-xl-0">
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuDate" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <?= $annoricerca ?>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuDate">
+                                            <?php
+                                            foreach ($anni_disponibili as $anno_disp) {
+                                                $annoCorrente = $anno_disp['anno'];
+                                            ?>
+                                                <li><a class="dropdown-item" href="analisi-clienti.php?c=<?= $id_del_cliente ?>&a=<?= $annoCorrente ?>"><?= $annoCorrente ?></a></li>
+                                            <?php
+                                            }
+                                            ?>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <?php
-                        $totale_bottiglie =  analisiBottigliePerCliente($id_del_cliente);
+                        $totale_bottiglie =  analisiBottigliePerClienteAnno($id_del_cliente, $annoricerca);
                         ?>
                         <!-- row closed -->
                         <div class="row row-sm">
@@ -223,7 +274,7 @@ if (isset($_GET['c'])) {
                                         <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
                                             <tbody>
                                                 <?php
-                                                $rossi = analisiBottigliePerTipoCliente($id_del_cliente, 'rosso');
+                                                $rossi = analisiBottigliePerTipoClienteAnno($id_del_cliente, 'rosso', $annoricerca);
 
                                                 //Per ogni elemento dell'array $rossi
                                                 foreach ($rossi as $varieta_vino) {
@@ -252,7 +303,7 @@ if (isset($_GET['c'])) {
                                         <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
                                             <tbody>
                                                 <?php
-                                                $rossi = analisiBottigliePerTipoCliente($id_del_cliente, 'bianco');
+                                                $rossi = analisiBottigliePerTipoClienteAnno($id_del_cliente, 'bianco', $annoricerca);
 
                                                 //Per ogni elemento dell'array $rossi
                                                 foreach ($rossi as $varieta_vino) {

@@ -2,7 +2,7 @@
     <div class="container-fluid main-container ">
         <div class="main-header-left ">
             <div class="responsive-logo">
-                <a href="index.html" class="header-logo">
+                <a href="home.php" class="header-logo">
                     <img src="assets/img/brand/logo.png" class="logo-1" alt="logo">
                     <img src="assets/img/brand/logo-white.png" class="dark-logo-1" alt="logo">
                 </a>

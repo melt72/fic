@@ -45,7 +45,6 @@ foreach ($clienti as $cliente) {
             $stmt->bindParam('zona', $zona, PDO::PARAM_STR);
             $stmt->execute();
         }
-        echo 'aggiunto cliente<br>';
     } else {
         if (isset($prima_parte) && ($prima_parte == 'RSC')) {
             $sql = "SELECT * FROM agenti_Roma WHERE id_cfic = :id";
@@ -59,9 +58,7 @@ foreach ($clienti as $cliente) {
                 $stmt->bindParam('id', $id, PDO::PARAM_INT);
                 $stmt->bindParam('zona', $zona, PDO::PARAM_STR);
                 $stmt->execute();
-                echo 'aggiunto agente alla zona di roma<br>';
             }
         }
     }
 }
-echo 'fine';

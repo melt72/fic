@@ -137,7 +137,7 @@ function get_id_zona($codzona)
 }
 
 //funzione per prelevare le fatture da fatture in cloud
-function get_fatture($page = 1, $data_inizio = '0')
+function get_fatture($page = 1, $data_inizio = '0', $data_fine = '0')
 {
     include 'config-api2.php';
     //array delle fatture
@@ -151,8 +151,11 @@ function get_fatture($page = 1, $data_inizio = '0')
         $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
         //Se date l'inizio non è nulla allora prelevo le fatture in base alla data
         if ($data_inizio != '0') {
-            // $q = "date >= " . $data_inizio;
-            $q = "date >= '$data_inizio'";
+            if ($data_fine != '0') {
+                $q = "date >= '$data_inizio' AND date <= '$data_fine'";
+            } else {
+                $q = "date >= '$data_inizio'";
+            }
             //id, tipo, campi  , detailed, , page, per_page, filtro$firstCompanyId, 'invoice', null, 'detailed', null, 1, 5, $q
             $issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'invoice', null, 'detailed', null, $page, 50, $q);
         } else {
@@ -241,12 +244,14 @@ function get_fatture($page = 1, $data_inizio = '0')
             );
             // Iterare attraverso la lista dei prodotti
             foreach ($prodotti_fattura as $prodotto) {
-                $cod_prodotto = $prodotto->getProductId(); // codice del prodotto
+                $id_prodotto = $prodotto->getProductId(); // codice del prodotto
+                $cod_prodotto = $prodotto->getCode(); // codice del prodotto
                 $nome_prodotto = $prodotto->getName(); // nome del prodotto
                 $quantita = $prodotto->getQty(); // quantità del prodotto
                 if ($quantita != '1') { //Escludo le quantità date in omaggio
                     // Aggiungere il prodotto e la quantità all'array
                     $lista_prodotti[] = array(
+                        'id_prodotto' => $id_prodotto,
                         'cod_prodotto' => $cod_prodotto,
                         'nome_prodotto' => $nome_prodotto,
                         'quantita' => $quantita
@@ -274,6 +279,115 @@ function get_fatture($page = 1, $data_inizio = '0')
     }
 }
 
+
+
+function get_notedicredito($page = 1, $data_inizio = '0', $data_fine = '0')
+{
+    include 'config-api2.php';
+    //array delle fatture
+    $fatture = array();
+    try {
+        // Retrieve the first company id
+        $companies = $userApi->listUserCompanies();
+
+        // se il tipo è all allora prelevo tutte le fatture
+
+        $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
+        //Se date l'inizio non è nulla allora prelevo le fatture in base alla data
+        if ($data_inizio != '0') {
+            if ($data_fine != '0') {
+                $q = "date >= '$data_inizio' AND date <= '$data_fine'";
+            } else {
+                $q = "date >= '$data_inizio'";
+            }
+            //id, tipo, campi  , detailed, , page, per_page, filtro$firstCompanyId, 'invoice', null, 'detailed', null, 1, 5, $q
+            $issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'credit_note', null, 'detailed', null, $page, 50, $q);
+        } else {
+            //altrimenti prelevo tutte le fatture
+            $issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'credit_note', null, 'detailed', null, $page, 50);
+        }
+
+        // Se ci sono fatture, leggi il numero di pagine
+        if (!empty($issuedEInvoices->getData())) {
+            $pagine = $issuedEInvoices['last_page']; // Numero di fatture trovate
+            array_push($fatture, $pagine);
+        }
+
+
+        //per ogni fattura prelevo i dati
+        foreach ($issuedEInvoices->getData() as $issuedEInvoice) {
+
+            $id = $issuedEInvoice->getId(); //id della fattura
+            $id_cliente = $issuedEInvoice->getEntity()->getId();    //id cliente
+            $numero = $issuedEInvoice->getNumber(); //numero della fattura
+            $imp_netto = $issuedEInvoice->getAmountNet(); //importo netto
+            $iva = $issuedEInvoice->getAmountVat(); //iva
+            $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
+
+
+            //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
+
+
+
+            $data = $issuedEInvoice->getDate(); //data della fattura
+            //la data in formato aaaa-mm-gg
+            $data = $data->format('Y-m-d');
+
+
+            //la data in formato aaaa-mm-gg
+
+
+            $prodotti_fattura = $issuedEInvoice->getItemsList();
+
+            // Creare un array per la lista dei prodotti e quantità
+            $lista_prodotti = array();
+            $datiFattura = array(
+                'id' => $id,
+                'id_cliente' => $id_cliente,
+                'numero' => $numero,
+                'imp_netto' => $imp_netto,
+                'iva' => $iva,
+                'imp_tot' => $imp_tot,
+
+                'data' => $data
+            );
+            // Iterare attraverso la lista dei prodotti
+            foreach ($prodotti_fattura as $prodotto) {
+                $id = $prodotto->getProductId(); // id del prodotto
+                $cod_prodotto = $prodotto->getCode(); // codice del prodotto
+
+                $nome_prodotto = $prodotto->getName(); // nome del prodotto
+                $quantita = $prodotto->getQty(); // quantità del prodotto
+                if ($quantita != '1') { //Escludo le quantità date in omaggio
+                    // Aggiungere il prodotto e la quantità all'array
+                    $lista_prodotti[] = array(
+                        'id' => $id,
+                        'cod_prodotto' => $cod_prodotto,
+                        'nome_prodotto' => $nome_prodotto,
+                        'quantita' => $quantita
+                    );
+                }
+            }
+
+
+            $datiFattura['prodotti'] = $lista_prodotti;
+
+
+
+            // Aggiungi l'array datiFattura all'array fatture_totali
+            $fatture_totali[] = $datiFattura;
+        }
+        //se il 
+        if ($page < $pagine) {
+            $page++;
+            $fatture_totali = array_merge($fatture_totali, get_notedicredito($page, $data_inizio));
+        }
+
+        return $fatture_totali;
+    } catch (Exception $e) {
+        echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;
+    }
+}
 //funzione per prelevare la fattura singola da fatture in cloud
 function get_fattura($id_doc)
 {
@@ -420,6 +534,22 @@ function get_data_ultima_fattura()
     return $last_date;
 }
 
+//Funzione per determinare la data dell'ultima nota di credito emessa
+function get_data_ultima_notadicredito()
+{
+    include 'include/configpdo.php';
+    $sql = "SELECT MAX(data_ndc) AS ultima_data FROM ndc";
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($result) {
+        $last_date = $result['ultima_data'];
+    } else {
+        $last_date = '0';
+    }
+    return $last_date;
+}
+//Funzione per determinare la varietà del vino
 function determinaVarietaVino($nome_stringa)
 {
     $array_varieta = array(
@@ -452,9 +582,14 @@ function determinaVarietaVino($nome_stringa)
 //Funzione che trova la lista di tutte le fatture non pagate
 function fatture_non_pagate()
 {
+    //Anno attuale
+    $anno = date('Y');
+    //Anno precedente
+    $anno_prec = $anno - 1;
     include 'include/configpdo.php';
-    $sql = "SELECT id_ffic FROM fatture WHERE status = 'not_paid'";
+    $sql = "SELECT id_ffic FROM fatture WHERE status = 'not_paid' AND YEAR(data_f) = :anno_prec";
     $stmt = $db->prepare($sql);
+    $stmt->bindParam('anno_prec', $anno_prec, PDO::PARAM_INT);
     $stmt->execute();
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $result;

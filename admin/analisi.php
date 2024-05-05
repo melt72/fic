@@ -147,6 +147,7 @@ if (isset($_GET['a'])) {
                 <!-- row -->
                 <?php
                 $trimestre = analisiImponibileTrimestre($anno);
+                $trimestrePrecedente = analisiImponibileTrimestre($anno - 1);
                 ?>
                 <div class="row row-sm">
                     <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
@@ -158,8 +159,28 @@ if (isset($_GET['a'])) {
                                 <div class="pb-0 mt-0">
                                     <div class="d-flex">
                                         <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $trimestre['1'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['1'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['1'] ?></h4>
                                         </div>
+                                        <span class="float-end my-auto ms-auto">
+                                            <?php
+                                            try {
+                                                $perc = round((floatval($trimestre['1']) - floatval($trimestrePrecedente['1'])) / floatval($trimestrePrecedente['1']) * 100);
+                                            } catch (DivisionByZeroError $e) {
+                                                $perc = 0;
+                                            }
+                                            //se la percentuale è positiva
+                                            if ($perc > 0) {
+                                                $icona = "fas fa-arrow-circle-up text-success";
+                                                $colore = "bg-success";
+                                            } else {
+                                                $icona = "fas fa-arrow-circle-down text-danger";
+                                                $colore = "bg-danger";
+                                            }
+                                            ?>
+                                            <i class="<?= $icona ?>"></i>
+                                            <span class="text-white op-7"> <?= $perc ?> %</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -174,9 +195,30 @@ if (isset($_GET['a'])) {
                                 <div class="pb-0 mt-0">
                                     <div class="d-flex">
                                         <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $trimestre['2'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['2'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['2'] ?></h4>
                                         </div>
+                                        <span class="float-end my-auto ms-auto">
+                                            <?php
+                                            try {
+                                                $perc = round((floatval($trimestre['2']) - floatval($trimestrePrecedente['2'])) / floatval($trimestrePrecedente['2']) * 100);
+                                            } catch (DivisionByZeroError $e) {
+                                                $perc = 0;
+                                            }
+                                            //se la percentuale è positiva
+                                            if ($perc > 0) {
+                                                $icona = "fas fa-arrow-circle-up text-success";
+                                                $colore = "bg-success";
+                                            } else {
+                                                $icona = "fas fa-arrow-circle-down text-danger";
+                                                $colore = "bg-danger";
+                                            }
+                                            ?>
+                                            <i class="<?= $icona ?>"></i>
+                                            <span class="text-white op-7"> <?= $perc ?> %</span>
+                                        </span>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -190,9 +232,30 @@ if (isset($_GET['a'])) {
                                 <div class="pb-0 mt-0">
                                     <div class="d-flex">
                                         <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $trimestre['3'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['3'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['3'] ?></h4>
                                         </div>
+                                        <span class="float-end my-auto ms-auto">
+                                            <?php
+                                            try {
+                                                $perc = round((floatval($trimestre['3']) - floatval($trimestrePrecedente['3'])) / floatval($trimestrePrecedente['3']) * 100);
+                                            } catch (DivisionByZeroError $e) {
+                                                $perc = 0;
+                                            }
+                                            //se la percentuale è positiva
+                                            if ($perc > 0) {
+                                                $icona = "fas fa-arrow-circle-up text-success";
+                                                $colore = "bg-success";
+                                            } else {
+                                                $icona = "fas fa-arrow-circle-down text-danger";
+                                                $colore = "bg-danger";
+                                            }
+                                            ?>
+                                            <i class="<?= $icona ?>"></i>
+                                            <span class="text-white op-7"> <?= $perc ?> %</span>
+                                        </span>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -206,15 +269,52 @@ if (isset($_GET['a'])) {
                                 <div class="pb-0 mt-0">
                                     <div class="d-flex">
                                         <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $trimestre['4'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['4'] ?></h4>
+                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['4'] ?></h4>
                                         </div>
+                                        <span class="float-end my-auto ms-auto">
+                                            <?php
+                                            try {
+                                                $perc = round((floatval($trimestre['4']) - floatval($trimestrePrecedente['4'])) / floatval($trimestrePrecedente['4']) * 100);
+                                            } catch (DivisionByZeroError $e) {
+                                                $perc = 0;
+                                            }
+                                            //se la percentuale è positiva
+                                            if ($perc > 0) {
+                                                $icona = "fas fa-arrow-circle-up text-success";
+                                                $colore = "bg-success";
+                                            } else {
+                                                $icona = "fas fa-arrow-circle-down text-danger";
+                                                $colore = "bg-danger";
+                                            }
+                                            ?>
+                                            <i class="<?= $icona ?>"></i>
+                                            <span class="text-white op-7"> <?= $perc ?> %</span>
+                                        </span>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <!-- row closed -->
+                <?php
+                if (NdcAnno($anno)) {
+
+                ?>
+                    <div class="row row-sm">
+                        <div class="col-sm-12 col-md-12">
+                            <div class="alert alert-solid-warning" role="alert">
+                                <button aria-label="Close" class="close" data-bs-dismiss="alert" type="button">
+                                    <span aria-hidden="true">×</span></button>
+                                <strong>Warning!</strong> Il valore degli imponibili è stato rettificato dall'emissione di note di credito
+                            </div>
+                        </div>
+                    </div>
+                <?php
+                }
+                ?>
                 <!-- row opened -->
                 <div class="row row-sm">
                     <div class="col-md-12 col-lg-12 col-xl-12">

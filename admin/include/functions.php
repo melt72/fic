@@ -1192,7 +1192,7 @@ function getAnniFatture()
 {
     include(__DIR__ . '/../../include/configpdo.php');
     try {
-        $query = "SELECT DISTINCT YEAR(data_f) as anno FROM `fatture` ORDER BY `anno` ASC";
+        $query = "SELECT DISTINCT YEAR(data_f) as anno FROM `fatture` ORDER BY `anno` DESC";
         $stmt = $db->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -2203,8 +2203,13 @@ function analisiTotale($anno)
     try {
         // Totale
         $queryTotale = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno";
-        $totale = getTotalFromQuery($db,  $anno, $queryTotale);
-
+        $totale1 = getTotalFromQuery($db,  $anno, $queryTotale);
+        $queryNDCTotale = "SELECT SUM(imp_netto) AS totale FROM `ndc` WHERE YEAR(data_ndc)=:anno";
+        $totale2 = getTotalFromQuery($db,  $anno, $queryNDCTotale);
+        if ($totale2 == null) {
+            $totale2 = 0;
+        }
+        $totale = $totale1 - $totale2;
         // Incassato
         $queryIncassato = "SELECT SUM(imp_netto) AS totale FROM `fatture` WHERE YEAR(data_f)=:anno AND status='paid'";
         $incassato = getTotalFromQuery($db, $anno,  $queryIncassato);
@@ -2218,6 +2223,8 @@ function analisiTotale($anno)
 
         $array = array(
             'totale' => arrotondaEFormatta($totale),
+            'totale1' => arrotondaEFormatta($totale1),
+            'totale2' => arrotondaEFormatta($totale2),
             'incassato' => arrotondaEFormatta($incassato),
             'da_incassare' => arrotondaEFormatta($da_incassare),
             'non_pagato_scaduto' => arrotondaEFormatta($non_pagato_scaduto)
@@ -2227,6 +2234,46 @@ function analisiTotale($anno)
         echo "Error : " . $e->getMessage();
     }
 }
+
+//Funzione per determinare se in un determinato anno ci sono state delle note di credito
+function NdcAnno($anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `ndc` WHERE YEAR(data_ndc)=:anno";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+function NdcCliente($id_cliente)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT * FROM `ndc` WHERE id_cfic=:id_cliente";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cliente', $id_cliente, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
 
 //Funzione per determinare l'imponibile totale per ciascuno dei 12 mesi di un certo anno .
 
@@ -2242,11 +2289,21 @@ function analisiImponibile($anno)
             $stmt->bindParam(':mese', $i, PDO::PARAM_INT);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $imponibile = $row['imponibile'];
-            if ($imponibile == null) {
-                $imponibile = '0';
+            $imponibile1 = $row['imponibile'];
+            if ($imponibile1 == null) {
+                $imponibile1 = '0';
             }
-            $array[] = $imponibile; // Modifica qui per pushare il valore nell'array
+            $query = "SELECT SUM(imp_netto) AS imponibile FROM `ndc` WHERE YEAR(data_ndc) = :anno AND MONTH(data_ndc) = :mese";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+            $stmt->bindParam(':mese', $i, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $imponibile2 = $row['imponibile'];
+            if ($imponibile2 == null) {
+                $imponibile2 = '0';
+            }
+            $array[] = $imponibile1 - $imponibile2; // Modifica qui per pushare il valore nell'array
         }
         return $array;
     } catch (PDOException $e) {
@@ -3000,11 +3057,27 @@ function imponibilePerClienteTotale($id_cfic)
         $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totale = $row['imponibile'];
+        $totale1 = $row['imponibile'];
     } catch (PDOException $e) {
         echo "Error : " . $e->getMessage();
     }
-
+    try {
+        $query = "SELECT
+        SUM(n.imp_netto) AS imponibile
+    FROM
+        ndc n
+    JOIN
+        clienti c ON n.id_cfic = c.id_cfic
+    WHERE
+       c.id_cfic = :id_cfic";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totale2 = $row['imponibile'];
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
     //Quello che è stato pagato paid
     try {
         $query = "SELECT
@@ -3062,7 +3135,7 @@ function imponibilePerClienteTotale($id_cfic)
         echo "Error : " . $e->getMessage();
     }
     $array = array(
-        'totale' => arrotondaEFormatta($totale),
+        'totale' => arrotondaEFormatta($totale1 - $totale2),
         'totale_pagato' => arrotondaEFormatta($totale_pagato),
         'totale_non_pagato' => arrotondaEFormatta($totale_non_pagato),
         'totale_non_pagato_scaduto' => arrotondaEFormatta($totale_non_pagato_scaduto)
@@ -3077,7 +3150,8 @@ function anniConFatturePerCliente($id_cfic)
     try {
         $query = "SELECT DISTINCT YEAR(data_f) AS anno
                   FROM fatture
-                  WHERE id_cfic = :id_cfic";
+                  WHERE id_cfic = :id_cfic
+                  ORDER BY anno DESC";
 
         $stmt = $db->prepare($query);
         $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
@@ -3302,7 +3376,40 @@ function analisiBottigliePerTipoCliente($id_cfic, $tipo)
         return false; // Ritorna un valore significativo in caso di errore
     }
 }
+function analisiBottigliePerTipoClienteAnno($id_cfic, $tipo, $anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+            lp.varieta,
+            SUM(p.qta) AS quantita_prodotto
+        FROM
+            fatture f
+            INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+            INNER JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+            INNER JOIN clienti c ON f.id_cfic = c.id_cfic
+        WHERE
+            c.id_cfic = :id_cfic AND lp.tipo = :tipo AND p.anno = :anno AND lp.varieta !='Varietà non trovata'
+        GROUP BY
+            lp.varieta";
 
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->bindParam(':tipo', $tipo, PDO::PARAM_STR);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_INT);
+        $stmt->execute();
+
+        // Recupera i risultati come array associativo
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Restituisci i risultati
+        return $result;
+    } catch (PDOException $e) {
+        // Gestisci gli errori in modo appropriato, ad esempio, loggandoli o restituendo un messaggio di errore
+        echo "Error: " . $e->getMessage();
+        return false; // Ritorna un valore significativo in caso di errore
+    }
+}
 //Funziona per determinare il totale delle bottiglie di Un determinato cliente
 function analisiBottigliePerCliente($id_cfic)
 {
@@ -3318,6 +3425,33 @@ function analisiBottigliePerCliente($id_cfic)
         f.id_cfic = :id_cfic";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $qta_cliente = $row['quantita_prodotto'];
+        if ($qta_cliente === null) {
+            $qta_cliente = '0';
+        }
+        return $qta_cliente;
+    } catch (PDOException $e) {
+        echo "Error : " . $e->getMessage();
+    }
+}
+
+function analisiBottigliePerClienteAnno($id_cfic, $anno)
+{
+    include(__DIR__ . '/../../include/configpdo.php');
+    try {
+        $query = "SELECT
+        SUM(p.qta) AS quantita_prodotto
+    FROM
+        fatture f
+        INNER JOIN prodotti p ON f.id_ffic = p.id_ffic
+        JOIN lista_prodotti lp ON p.id_prod = lp.prod_id
+    WHERE
+        f.id_cfic = :id_cfic AND p.anno = :anno";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id_cfic', $id_cfic, PDO::PARAM_INT);
+        $stmt->bindParam(':anno', $anno, PDO::PARAM_INT);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $qta_cliente = $row['quantita_prodotto'];

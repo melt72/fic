@@ -38,7 +38,7 @@ if (isset($_SESSION['token'])) {
     } else {
         // Se il token di refresh non è presente, reindirizza per ottenere un nuovo token
         if (!isset($_GET['code'])) {
-            $url = $oauth->getAuthorizationUrl([Scope::ENTITY_SUPPLIERS_READ, Scope::ENTITY_CLIENTS_READ, Scope::ISSUED_DOCUMENTS_INVOICES_READ, Scope::PRODUCTS_READ], "EXAMPLE_STATE");
+            $url = $oauth->getAuthorizationUrl([Scope::ENTITY_SUPPLIERS_READ, Scope::ISSUED_DOCUMENTS_CREDIT_NOTES_READ, Scope::ENTITY_CLIENTS_READ, Scope::ISSUED_DOCUMENTS_INVOICES_READ, Scope::PRODUCTS_READ], "EXAMPLE_STATE");
             header('location: ' . $url);
             exit;
         } else {
