@@ -3,17 +3,13 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
     include 'functions.php';
     include(__DIR__ . '/../../include/configpdo.php');
     $tipo = $_POST['tipo'];
-
-
-
-
     switch ($tipo) {
         case 'lista': //Lista delle fatture per un determinato anno
             $fatture = get_fatture_agente($_POST['id'], $_POST['anno']);
             foreach ($fatture as $fattura) {
 ?>
                 <tr>
-                    <td>Bella</td>
+                    <td><?= $fattura['nome'] ?></td>
                     <td><?= $fattura['num_f'] ?></td>
                     <td>Data: <?= date('d/m/Y', strtotime($fattura['data_f'])) ?><br>Scad: <?= date('d/m/Y', strtotime($fattura['data_scadenza'])) ?> </td>
                     <td><?= arrotondaEFormatta($fattura['imp_tot']) ?> €</td>
@@ -31,6 +27,8 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                 </tr>
 <?php }
             break;
+
+
 
         default:
             # code...

@@ -99,6 +99,7 @@ include 'partials/header.php';
                                                                                 <option selected>Select one</option>
                                                                                 <option value="1" <?= $zona['provv'] == 1 ? ' selected' : '' ?>>50% Agente - 50% Agenzia</option>
                                                                                 <option value="2" <?= $zona['provv'] == 2 ? ' selected' : '' ?>>100% Agenzia</option>
+                                                                                <option value="4" <?= $zona['provv'] == 4 ? ' selected' : '' ?>>9% Agente - 7% Agenzia</option>
                                                                             </select>
                                                                         <?php
                                                                         } else {

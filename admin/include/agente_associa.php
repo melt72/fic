@@ -8,14 +8,28 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         $sigle = '';
         $perc = '0';
     else :
+        $perc = 0;
         $sigle = $_POST['value'];
-        //Leggo la percentuale di default della tua religione in base alla sigla
-        $query = "SELECT `provv` FROM `agenti` WHERE `sigla`=:sigla";
-        $stmt  = $db->prepare($query);
-        $stmt->bindParam('sigla', $_POST['value'], PDO::PARAM_STR);
-        $stmt->execute();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $perc = $row['provv'];
+
+        if ($sigle == 'RSC') {
+            //leggo il cliente della fattura e lo unico all'agente RSC per il calcolo della percentuale
+            $query = "SELECT z.provv FROM `fatture` f INNER JOIN agenti_roma a ON f.id_cfic=a.id_cfic INNER JOIN zone_roma z ON a.id_zona=z.id_zona WHERE f.id =:id";
+            $stmt  = $db->prepare($query);
+            $stmt->bindParam('id', $_POST['pk'], PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $perc = $row['provv'];
+            }
+        } else {
+            //Leggo la percentuale di default della tua religione in base alla sigla per l'agente non RSC
+            $query = "SELECT `provv` FROM `agenti` WHERE `sigla`=:sigla";
+            $stmt  = $db->prepare($query);
+            $stmt->bindParam('sigla', $_POST['value'], PDO::PARAM_STR);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $perc = $row['provv'];
+        }
     endif;
 
     //Aggiorno la tabella fatture

@@ -151,25 +151,7 @@
 												<th></th>
 											</tr>
 										</thead>
-										<tbody id="dati_fatture">
-											<?php
-											if (isset($id_agente)) :
-												$fatture_da_liquidare = getFattureDaLiquidareAgente($id_agente);
-												foreach ($fatture_da_liquidare as $fattura) {
-													$provvigione = arrotondaEFormatta($fattura['provvigione']);
-											?>
-													<tr>
-														<td><?= $fattura['nome_cliente'] ?></td>
-														<td>N° <?= $fattura['num_f'] ?> del<br> <?= date('d/m/Y', strtotime($fattura['data_f'])) ?></td>
-														<td><?= arrotondaEFormatta($fattura['imp_netto']) ?> €</td>
-														<td><?= $fattura['provv_percent'] ?> %</td>
-														<td><?= $provvigione ?> €</td>
-														<td><i class="fe fe-check-square text-success li-scelta inclusa" data-id="<?= $fattura['id_fatt'] ?>" data-importo="<?= $provvigione ?>" data-bs-toggle="tooltip" title="" data-bs-original-title="fe fe-check-square" aria-label="fe fe-check-square"></i></td>
-													</tr>
-											<?php
-												}
-											endif;
-											?>
+										<tbody id="dati_fatture_agente">
 										</tbody>
 									</table>
 								</div> <!-- Tabella con le fatture da liquidare -->
@@ -177,7 +159,8 @@
 						</div>
 					</div>
 					<div class="modal-footer">
-						<button class="btn ripple btn-primary liquida_provv" type="button">Liquida Provvigione</button>
+						<button class="btn ripple btn-primary anteprima" type="button">Anteprima Liquidazione</button>
+						<button class="btn ripple btn-success liquida_provv" type="button">Liquida Provvigione</button>
 						<button class="btn ripple btn-secondary" data-bs-dismiss="modal" type="button">Chiudi</button>
 					</div>
 				</div>
@@ -247,7 +230,8 @@
 						</div>
 					</div>
 					<div class="modal-footer">
-						<button class="btn ripple btn-primary liquida_provv_roma" type="button">Liquida Provvigione</button>
+						<button class="btn ripple btn-primary anteprima" type="button">Anteprima Liquidazione</button>
+						<button class="btn ripple btn-success liquida_provv_roma" type="button">Liquida Provvigione</button>
 						<button class="btn ripple btn-secondary" data-bs-dismiss="modal" type="button">Chiudi</button>
 					</div>
 				</div>

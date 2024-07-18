@@ -12,7 +12,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         echo "Error : " . $e->getMessage();
     }
 
-    include(__DIR__ . '/../../include/configpdo.php');
+
     try {
         $query = "SELECT `imp_netto`,provv_percent FROM `fatture` WHERE `id`=:id";
         $stmt = $db->prepare($query);

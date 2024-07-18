@@ -1026,10 +1026,10 @@ var prov1 = new BSTable("basic-edittable22",{
 
 
 	//Se schiaccio la classe .liquidazione Apro il modal modal-liquidazione
-	$(document).on('click', '.liquidazione', function(event) {
-		event.preventDefault();
-		$('#modal-liquidazione').modal('show');
-	});
+	// $(document).on('click', '.liquidazione', function(event) {
+	// 	event.preventDefault();
+	// 	$('#modal-liquidazione').modal('show');
+	// });
 
 	$('#data_liquidazione').bootstrapdatepicker({
         format: "dd/mm/yyyy",
@@ -1093,76 +1093,76 @@ var prov1 = new BSTable("basic-edittable22",{
 
 
     //Quando schiaccio sul bottone liquida provvigione Invio i dati tramite ajax
-    $(document).on('click', '.liquida_provv', function(e) {
-        e.preventDefault();
-        //Disabilito il bottone
-        $('.liquida_provv').prop('disabled', true);
-        var metodo_pagamento = $('#metodo_pagamento').val();
-        var note = $('#note').val();
-        var data_liquidazione = $('#data_liquidazione').val();
-        var fatture = [];
-        $('.inclusa').each(function() {
-            var id_fattura = $(this).data('id');
-            fatture.push(id_fattura);
-        });
-        $.ajax({
-            url: 'include/liquidazione.php',
-            type: 'POST',
-            data: {
-                id_fattura: fatture,
-                id_agente: id,
-                // metodo_pagamento: metodo_pagamento,
-                // note: note,
-                data_liquidazione: data_liquidazione,
-                tipo: 'liquida'
-            },
-            success: function(response) {
-                //Chiudo il model
-                $('#modal-liquidazione').modal('hide');
-                //Success Message
-                Swal.fire({
-                    title: "Well done!",
-                    text: 'Liquidazione registrata!',
-                    icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonText: 'Vedi Velina PDF',
-                    cancelButtonText: 'Esci',
-                    confirmButtonColor: '#57a94f'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-						console.log('aa'+ response);
-                        //apro  una nuova scheda con il pdf
-						window.open('pdf.php?id_liquidazione=' + response, '_blank');
-                    }
-                });
-            },
-            error: function(error) {
-                console.error('Errore durante la chiamata AJAX:', error);
-            }
-        });
-    });
+    // $(document).on('click', '.liquida_provv', function(e) {
+    //     e.preventDefault();
+    //     //Disabilito il bottone
+    //     $('.liquida_provv').prop('disabled', true);
+    //     var metodo_pagamento = $('#metodo_pagamento').val();
+    //     var note = $('#note').val();
+    //     var data_liquidazione = $('#data_liquidazione').val();
+    //     var fatture = [];
+    //     $('.inclusa').each(function() {
+    //         var id_fattura = $(this).data('id');
+    //         fatture.push(id_fattura);
+    //     });
+    //     $.ajax({
+    //         url: 'include/liquidazione.php',
+    //         type: 'POST',
+    //         data: {
+    //             id_fattura: fatture,
+    //             id_agente: id,
+    //             // metodo_pagamento: metodo_pagamento,
+    //             // note: note,
+    //             data_liquidazione: data_liquidazione,
+    //             tipo: 'liquida'
+    //         },
+    //         success: function(response) {
+    //             //Chiudo il model
+    //             $('#modal-liquidazione').modal('hide');
+    //             //Success Message
+    //             Swal.fire({
+    //                 title: "Well done!",
+    //                 text: 'Liquidazione registrata!',
+    //                 icon: 'success',
+    //                 showCancelButton: true,
+    //                 confirmButtonText: 'Vedi Velina PDF',
+    //                 cancelButtonText: 'Esci',
+    //                 confirmButtonColor: '#57a94f'
+    //             }).then((result) => {
+    //                 if (result.isConfirmed) {
+	// 					console.log('aa'+ response);
+    //                     //apro  una nuova scheda con il pdf
+	// 					window.open('pdf.php?id_liquidazione=' + response, '_blank');
+    //                 }
+    //             });
+    //         },
+    //         error: function(error) {
+    //             console.error('Errore durante la chiamata AJAX:', error);
+    //         }
+    //     });
+    // });
 
 
 	/**
 	 * *Liquidazione zona
 	 */
-	$(document).on('click', '.liquidazione_zona', function(event) {
-		event.preventDefault();
-		//Genero i dati tramite ajax
-		$.ajax({
-			type: "post",
-			url: "include/liquidazione.php",
-			data: {
-				tipo: 'lista_roma'
-			},
-			dataType: "html",
-			success: function(response) {
-				//Inserisco i valori json nel div #tab-zone e #tab-content-zone
-				$('#dati_fatture_modal').html(response);
-			}
-		});
-		$('#modal-liquidazione-zona').modal('show');
-	});
+	// $(document).on('click', '.liquidazione_zona', function(event) {
+	// 	event.preventDefault();
+	// 	//Genero i dati tramite ajax
+	// 	$.ajax({
+	// 		type: "post",
+	// 		url: "include/liquidazione.php",
+	// 		data: {
+	// 			tipo: 'lista_roma'
+	// 		},
+	// 		dataType: "html",
+	// 		success: function(response) {
+	// 			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+	// 			$('#dati_fatture_modal').html(response);
+	// 		}
+	// 	});
+	// 	$('#modal-liquidazione-zona').modal('show');
+	// });
 	
 	$('#data_liquidazione_zona').bootstrapdatepicker({
         format: "dd/mm/yyyy",
@@ -1213,50 +1213,51 @@ var prov1 = new BSTable("basic-edittable22",{
         button.removeClass(removeIconClass).addClass(addIconClass);
     }
 
-//Quando schiaccio sul bottone liquida_provv_roma Invio i dati tramite ajax
-$(document).on('click', '.liquida_provv_roma', function(e) {
-	e.preventDefault();
-	//Disabilito il bottone
-	$('.liquida_provv_roma').prop('disabled', true);
-	var data_liquidazione = $('#data_liquidazione_zona').val();
-	var fatture = [];
-	$('.inclusa_zona').each(function() {
-		var id_fattura = $(this).data('id');
-		fatture.push(id_fattura);
-	});
-	$.ajax({
-		url: 'include/liquidazione.php',
-		type: 'POST',
-		data: {
-			id_fattura: fatture,
-			data_liquidazione: data_liquidazione,
-			tipo: 'liquida_zona'
-		},
-		success: function(response) {
-			var id_fattura = response;
-			//Chiudo il model
-			$('#modal-liquidazione-zona').modal('hide');
-			//Success Message
-			Swal.fire({
-				title: "Well done!",
-				text: 'Liquidazione registrata!',
-				icon: 'success',
-				showCancelButton: true,
-				confirmButtonText: 'Vedi Velina',
-				cancelButtonText: 'Esci',
-				confirmButtonColor: '#57a94f'
-			}).then((result) => {
-				if (result.isConfirmed) {
-					//apro  una nuova scheda con il pdf
-					window.open('pdf_roma.php?id_liquidazione=' + id_fattura, '_blank');
-				}
-			});
-		},
-		error: function(error) {
-			console.error('Errore durante la chiamata AJAX:', error);
-		}
-	});
-});
+// //Quando schiaccio sul bottone liquida_provv_roma Invio i dati tramite ajax
+// $(document).on('click', '.liquida_provv_roma', function(e) {
+// 	e.preventDefault();
+// 	//Disabilito il bottone
+// 	$('.liquida_provv_roma').prop('disabled', true);
+// 	var data_liquidazione = $('#data_liquidazione_zona').val();
+// 	var fatture = [];
+// 	$('.inclusa_zona').each(function() {
+// 		var id_fattura = $(this).data('id');
+// 		fatture.push(id_fattura);
+// 	});
+// 	console.log(fatture);
+// 	// $.ajax({
+// 	// 	url: 'include/liquidazione.php',
+// 	// 	type: 'POST',
+// 	// 	data: {
+// 	// 		id_fattura: fatture,
+// 	// 		data_liquidazione: data_liquidazione,
+// 	// 		tipo: 'liquida_zona'
+// 	// 	},
+// 	// 	success: function(response) {
+// 	// 		var id_fattura = response;
+// 	// 		//Chiudo il model
+// 	// 		$('#modal-liquidazione-zona').modal('hide');
+// 	// 		//Success Message
+// 	// 		Swal.fire({
+// 	// 			title: "Well done!",
+// 	// 			text: 'Liquidazione registrata!',
+// 	// 			icon: 'success',
+// 	// 			showCancelButton: true,
+// 	// 			confirmButtonText: 'Vedi Velina',
+// 	// 			cancelButtonText: 'Esci',
+// 	// 			confirmButtonColor: '#57a94f'
+// 	// 		}).then((result) => {
+// 	// 			if (result.isConfirmed) {
+// 	// 				//apro  una nuova scheda con il pdf
+// 	// 				window.open('pdf_roma.php?id_liquidazione=' + id_fattura, '_blank');
+// 	// 			}
+// 	// 		});
+// 	// 	},
+// 	// 	error: function(error) {
+// 	// 		console.error('Errore durante la chiamata AJAX:', error);
+// 	// 	}
+// 	// });
+// });
 
 //Quando schiaccio sul bottone Un classe vedi scaduti Apro il model generico
 $(document).on('click', '.vedi_scaduti', function(event) {

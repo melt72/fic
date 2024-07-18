@@ -4,7 +4,7 @@
 //******************************************************************
 try {
     $hostname = "localhost";
-    $database = "confinis";
+    $database = "c2";
     $username = "root";
     $password = "";
     @define("DB_Connect_Charset", "utf8");

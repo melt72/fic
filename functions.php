@@ -179,7 +179,8 @@ function get_fatture($page = 1, $data_inizio = '0', $data_fine = '0')
             $imp_netto = $issuedEInvoice->getAmountNet(); //importo netto
             $iva = $issuedEInvoice->getAmountVat(); //iva
             $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
-            $oggetto = $issuedEInvoice->getNotes(); //note fattura non visibile
+            // $oggetto = $issuedEInvoice->getNotes(); //note fattura  visibile
+            $oggetto = $issuedEInvoice->getSubject(); //note fattura non visibile RSC
             //$oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC    
 
             //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
@@ -391,7 +392,7 @@ function get_notedicredito($page = 1, $data_inizio = '0', $data_fine = '0')
 //funzione per prelevare la fattura singola da fatture in cloud
 function get_fattura($id_doc)
 {
-    include 'config-api.php';
+    include 'config-api2.php';
     //array delle fatture
     $fatture = array();
     try {
@@ -410,6 +411,7 @@ function get_fattura($id_doc)
         $imp_netto = $issuedEInvoice->getAmountNet(); //importo netto
         $note = $issuedEInvoice->getNotes(); //note fattura non visibile
         $oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC
+        $note2 = $issuedEInvoice->getSubject(); //note fattura visibile RSC
         $iva = $issuedEInvoice->getAmountVat(); //iva
         $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
         //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
@@ -448,6 +450,7 @@ function get_fattura($id_doc)
             'iva' => $iva,
             'imp_tot' => $imp_tot,
             'note' => $oggetto,
+            'note2' => $note2,
             'status' => $status,
             'data' => $data,
             'data_scadenza' => $data_scadenza
@@ -490,7 +493,7 @@ function get_percentuale($sigla, $cod_cliente = '')
     switch ($sigla) {
         case 'RSC': //Agenzia di Roma
             //Controllo la tabella agenti Roma inner join . Zone Roma . Per determinare la provvigione di default per quel cliente e quella zona .
-            $sql = "SELECT * FROM agenti_roma INNER JOIN zone_roma ON agenti_roma.id_zona = zone_roma.id_zona WHERE agenti_roma.id_cfic = :cod_cliente";
+            $sql = "SELECT * FROM agenti_roma INNER JOIN zone_roma ON agenti_roma.id_zona = zone_roma.id_zona WHERE agenti_roma.id_cfic =:cod_cliente";
             $stmt = $db->prepare($sql);
             $stmt->bindParam('cod_cliente', $cod_cliente, PDO::PARAM_INT);
             $stmt->execute();
@@ -560,6 +563,7 @@ function determinaVarietaVino($nome_stringa)
         'Malvasia',
         'Pinot Grigio',
         'Pinot Nero',
+        'Pinot Bianco',
         'Ribolla',
         'Sauvignon',
         'Castadiva'
@@ -580,28 +584,33 @@ function determinaVarietaVino($nome_stringa)
 }
 
 //Funzione che trova la lista di tutte le fatture non pagate
-function fatture_non_pagate()
+function fatture_non_pagate($anno = 'default')
 {
-    //Anno attuale
-    $anno = date('Y');
-    //Anno precedente
-    $anno_prec = $anno - 1;
+    // Se l'anno non è specificato, usa l'anno corrente
+    if ($anno == 'default') {
+        $anno = date('Y');
+    }
+
+    $sql = "SELECT id_ffic FROM fatture WHERE status = 'not_paid' AND YEAR(data_f) = '$anno'";
+
+    // Connessione al database
     include 'include/configpdo.php';
-    $sql = "SELECT id_ffic FROM fatture WHERE status = 'not_paid' AND YEAR(data_f) = :anno_prec";
+
+    // Prepara e esegui la query
     $stmt = $db->prepare($sql);
-    $stmt->bindParam('anno_prec', $anno_prec, PDO::PARAM_INT);
     $stmt->execute();
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $result;
 }
 
 //Funzione che Controlla lo status della fattura in fatture in cloud
-function check_status()
+function check_status($anno)
 {
     include 'include/configpdo.php';
     include 'config-api2.php';
     //array delle fatture
-    $fatture_non_pagate = fatture_non_pagate();
+    $fatture_non_pagate = fatture_non_pagate($anno);
+    echo 'fatture non pagate ' . count($fatture_non_pagate) . '<br>';
     // Retrieve the first company id
     $companies = $userApi->listUserCompanies();
     // se il tipo è all allora prelevo tutte le fatture
@@ -609,21 +618,37 @@ function check_status()
     $field = 'status,paid_date';
     foreach ($fatture_non_pagate as $fattura) {
         $document_id = $fattura['id_ffic']; //id fattura
+        echo 'fattura ' . $document_id . '<br>';
         try {
             $issuedEInvoices = $issuedEInvoicesApi->getIssuedDocument($firstCompanyId, $document_id, $field, 'detailed');
+            // Verifica se la risposta contiene dati
+            if (!empty($issuedEInvoices)  && $issuedEInvoices->getData()) {
+                $paymentsList = $issuedEInvoices->getData()->getPaymentsList();
 
-            //Prelevo i dati della fattura
-            $status = $issuedEInvoices->getData()->getPaymentsList()[0]->getStatus(); //stato della fattura
-            $data_pag = $issuedEInvoices->getData()->getPaymentsList()[0]->getPaidDate(); //data di pagamento della fattura
-            if ($status == 'paid') {
-                $data_pag = $data_pag->format('Y-m-d');
-                $sql = "UPDATE fatture SET status = :status, data_pagamento=:datapagamento WHERE id_ffic = :id";
-                $stmt = $db->prepare($sql);
-                $stmt->bindParam('id', $document_id, PDO::PARAM_INT);
-                $stmt->bindParam('status', $status, PDO::PARAM_STR);
-                $stmt->bindParam('datapagamento', $data_pag, PDO::PARAM_STR);
-                $stmt->execute();
-                echo 'fattura aggiornata ' . $document_id . '<br>';
+                // Controlla se ci sono dati nella lista dei pagamenti
+                if (!empty($paymentsList)) { //Prelevo i dati della fattura
+                    $status = $paymentsList[0]->getStatus(); // stato della fattura
+                    if (!empty($paymentsList) && $paymentsList[0]->getPaidDate() !== null) {
+                        $data_pag = $paymentsList[0]->getPaidDate(); // data di pagamento della fattura
+                    } else {
+                        $data_pag = '';
+                    }
+                    if ($status == 'paid') {
+                        echo 'fattura pagata ' . $document_id . '<br>';
+                        $data_pag = $data_pag->format('Y-m-d');
+                        $sql = "UPDATE fatture SET status = :status, data_pagamento=:datapagamento WHERE id_ffic = :id";
+                        $stmt = $db->prepare($sql);
+                        $stmt->bindParam('id', $document_id, PDO::PARAM_INT);
+                        $stmt->bindParam('status', $status, PDO::PARAM_STR);
+                        $stmt->bindParam('datapagamento', $data_pag, PDO::PARAM_STR);
+                        $stmt->execute();
+                        echo 'fattura aggiornata ' . $document_id . '<br>';
+                    }
+                } else {
+                    throw new Exception('No payment data available');
+                }
+            } else {
+                throw new Exception('No data available from the API');
             }
         } catch (Exception $e) {
             echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;

@@ -109,7 +109,7 @@ try {
 // Lista fatture
 // $campi = "amount_net,entity,amount_vat";
 //$q = "date >= '2022-01-09'";
-$q = "date >= '2023-01-01'";
+$q = "date >= '2024-05-27'";
 // // id, tipo, campi  , detailed, , page, per_page, filtro
 $issuedEInvoices = $issuedEInvoicesApi->listIssuedDocuments($firstCompanyId, 'credit_note', null, 'detailed', null, 1, 100, $q);
 print_r($issuedEInvoices);

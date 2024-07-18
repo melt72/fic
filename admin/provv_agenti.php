@@ -78,6 +78,7 @@ if (isset($_GET['id'])) {
                         </div>
                         <?php
                         $fatture = get_fatture_agente($id_agente, 'all');
+
                         if (!empty($fatture)) :
                         ?>
                             <div class="card mg-b-20" id="tabs-style2">
@@ -228,7 +229,7 @@ if (isset($_GET['id'])) {
                                                         <div class="card-header d-flex justify-content-between align-items-center">
                                                             <h3 class="card-title">Liquidazioni provvigione</h3>
                                                             <div>
-                                                                <button class="btn btn-primary btn-sm liquidazione"><span class="fe fe-plus"> Nuova Liquidazione</span></button>
+                                                                <a href="agenti-liquidazione.php?id=<?= $id_agente ?>" class="btn btn-primary btn-sm"><span class="fe fe-plus"> Nuova Liquidazione</span></a>
                                                             </div>
                                                         </div>
                                                         <div class="card-body">
@@ -311,7 +312,6 @@ if (isset($_GET['id'])) {
 
 </html>
 <script>
-    var id = '<?= $id_agente ?>';
     $('#basic-edittable').DataTable({
         language: {
             searchPlaceholder: 'Search...',

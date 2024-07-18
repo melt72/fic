@@ -39,7 +39,7 @@ foreach ($clienti as $cliente) {
         $stmt->execute();
         //Se il cliente è un agente RSC di Roma lo aggiungo anche alla tabella agenti_Roma 
         if (isset($prima_parte) && ($prima_parte == 'RSC')) {
-            $sql = "INSERT INTO agenti_Roma (id_cfic, zona) VALUES (:id, :zona)";
+            $sql = "INSERT INTO agenti_Roma (id_cfic, id_zona) VALUES (:id, :zona)";
             $stmt = $db->prepare($sql);
             $stmt->bindParam('id', $id, PDO::PARAM_INT);
             $stmt->bindParam('zona', $zona, PDO::PARAM_STR);

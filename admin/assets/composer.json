@@ -3,6 +3,7 @@
         "netflie/whatsapp-cloud-api": "^2.1",
         "intervention/image": "^3.2",
         "mpdf/mpdf": "^8.2",
-        "fattureincloud/fattureincloud-php-sdk": "^2.0"
+        "fattureincloud/fattureincloud-php-sdk": "^2.0",
+        "phpoffice/phpspreadsheet": "^2.1"
     }
 }

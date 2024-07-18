@@ -1070,14 +1070,60 @@ function get_fatture_anno($year = 'all')
     return $stmt->fetchAll();
 }
 
+function get_fatture_anno_libera($year = 'all')
+{
+    require __DIR__ . '/../../include/configpdo.php';
+    $query = "SELECT 
+    clienti.nome, 
+    fatture.id AS id_fatt, 
+    fatture.sigla, 
+    fatture.num_f, 
+    fatture.imp_netto, 
+    fatture.imp_iva, 
+    fatture.imp_tot, 
+    fatture.data_f, 
+    fatture.data_scadenza, 
+    fatture.status, 
+    fatture.id_liquidazione, 
+    fatture.data_pagamento,
+    DATEDIFF(CURDATE(), fatture.data_scadenza) AS giorni_scaduti
+FROM 
+    fatture 
+INNER JOIN 
+    clienti 
+ON 
+    fatture.id_cfic = clienti.id_cfic
+";
+
+    switch ($year) {
+        case 'all':
+            $query .= "ORDER BY data_f DESC";
+            break;
+
+        case 'recenti':
+            $query .= "WHERE YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM fatture) ORDER BY data_f DESC";
+            break;
+
+        default:
+            $query .= "WHERE YEAR(data_f) = :i ORDER BY data_f DESC";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam('i', $year, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchAll();
+    }
+
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
 
 // lista delle fatture di un agente
-function get_fatture_agente($id_agente, $year = 'all')
+function get_fatture_agente($id_agente, $year = 'all', $a = '', $s = '', $e = '')
 {
     require __DIR__ . '/../../include/configpdo.php';
 
     // Parte comune della query
-    $commonQuery = "SELECT nome, fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione` FROM `fatture` 
+    $commonQuery = "SELECT nome, fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`,`status` FROM `fatture` 
                     INNER JOIN clienti ON fatture.id_cfic=clienti.id_cfic 
                     INNER JOIN agenti ON fatture.sigla=agenti.sigla 
                     WHERE agenti.id=:id_agente";
@@ -1091,16 +1137,25 @@ function get_fatture_agente($id_agente, $year = 'all')
             $query = $commonQuery . " AND YEAR(data_f) = (SELECT MAX(YEAR(data_f)) FROM `fatture`) ORDER BY `data_f` DESC";
             break;
 
+        case 'liquidazione':
+            //formato le date per la query in YYYY-MM-DD
+            $s = date('Y-m-d', strtotime($s));
+            $e = date('Y-m-d', strtotime($e));
+            $query = $commonQuery . " AND year(data_f)='$a' AND (fatture.data_pagamento BETWEEN '$s' AND '$e') AND status='paid' AND id_liquidazione IS NULL";
+
+            break;
         default:
-            $query = $commonQuery . " AND YEAR(data_f)=:year ORDER BY `data_f` DESC";
+            $s = date('Y-m-d', strtotime($s));
+            $e = date('Y-m-d', strtotime($e));
+            $query = $commonQuery . " AND YEAR(data_f)='$a' AND (fatture.data_pagamento BETWEEN '$s' AND '$e') ORDER BY `data_f` DESC";
     }
 
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);
+    $stmt->bindParam('id_agente', $id_agente, PDO::PARAM_INT);
 
-    if ($year !== 'all' && $year !== 'recenti') {
-        $stmt->bindParam(':year', $year, PDO::PARAM_STR);
-    }
+    // if ($year !== 'all' && $year !== 'recenti' && $year !== 'liquidazione') {
+    //     $stmt->bindParam(':year', $year, PDO::PARAM_STR);
+    // }
 
     $stmt->execute();
     return $stmt->fetchAll();
@@ -1715,8 +1770,17 @@ function getTotaleLiquidazioneAgente($id_agente)
 /**
  * *Funziona che calcola il totale della  della liquidazione per tutte le zone
  */
-function getTotaleLiquidazioneZoneRoma()
+function getTotaleLiquidazioneZoneRoma($anno, $start, $end)
+
 {
+    // start e end sono le date di inizio e fine, range di date quando è stato fatto il pagamento
+
+    //formato data yyyy-mm-dd
+    $start = date('Y-m-d', strtotime($start));
+    $end = date('Y-m-d', strtotime($end));
+
+
+
     //Inizializzo un array complessivo
     $array = array();
 
@@ -1732,9 +1796,26 @@ function getTotaleLiquidazioneZoneRoma()
         $a = 0; //totale della liquidazione per l'agente 
         $b = 0; //totale della liquidazione per agenzia
         try {
-            $query = "SELECT (`imp_netto` * 16 / 100) AS totale, provv_percent AS tipo FROM `fatture` INNER JOIN agenti_roma ON fatture.id_cfic=agenti_roma.id_cfic WHERE agenti_roma.id_zona=:id_zona AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '')";
+            $query = "SELECT 
+  (`imp_netto` * 16 / 100) AS totale,
+  provv_percent AS tipo 
+FROM 
+  `fatture`
+INNER JOIN 
+  agenti_roma ON fatture.id_cfic = agenti_roma.id_cfic 
+WHERE 
+  agenti_roma.id_zona = :id_zona 
+  AND `status` = 'paid' 
+  AND (id_liquidazione IS NULL OR id_liquidazione = '') 
+  AND YEAR(fatture.data_f) = :anno 
+ AND  fatture.data_pagamento BETWEEN :start AND :end";
+
+            //SELECT (`imp_netto` * 16 / 100) AS totale, provv_percent AS tipo FROM `fatture` INNER JOIN agenti_roma ON fatture.id_cfic=agenti_roma.id_cfic WHERE agenti_roma.id_zona=:id_zona AND `status`='paid' AND (id_liquidazione IS NULL OR id_liquidazione = '')
             $stmt = $db->prepare($query);
             $stmt->bindParam('id_zona', $id_zona, PDO::PARAM_INT);
+            $stmt->bindParam('start', $start, PDO::PARAM_STR);
+            $stmt->bindParam('end', $end, PDO::PARAM_STR);
+            $stmt->bindParam('anno', $anno, PDO::PARAM_STR);
             $stmt->execute();
             $dati =  $stmt->fetchAll();
             foreach ($dati as $row) {
@@ -1914,14 +1995,17 @@ function getDatiAgente($sigla)
 /**
  * *Funzione che scrive nel database la liquidazione
  */
-function setLiquidazione($sigla, $data, $totale)
+function setLiquidazione($sigla, $data, $anno, $periodo_start, $periodo_end, $totale)
 {
     include(__DIR__ . '/../../include/configpdo.php');
     try {
-        $query = "INSERT INTO `liquidazioni`(`sigla`, `data`, `importo`) VALUES (:sigla,:data_liq,:totale)";
+        $query = "INSERT INTO `liquidazioni`(`sigla`, `data`, `periodo_start`, `periodo_end`, `anno`, `importo`) VALUES (:sigla,:data_liq,:pstart, :pend,:anno, :totale)";
         $stmt = $db->prepare($query);
         $stmt->bindParam('sigla', $sigla, PDO::PARAM_STR);
         $stmt->bindParam('data_liq', $data, PDO::PARAM_STR);
+        $stmt->bindParam('pstart', $periodo_start, PDO::PARAM_STR);
+        $stmt->bindParam('pend', $periodo_end, PDO::PARAM_STR);
+        $stmt->bindParam('anno', $anno, PDO::PARAM_STR);
         $stmt->bindParam('totale', $totale, PDO::PARAM_STR);
         $stmt->execute();
         return $db->lastInsertId();
@@ -2023,7 +2107,7 @@ function getMetodoPagamento($numero)
 /**
  * *Funzione per le fatture di Roma
  */
-function get_fatture_roma($year = 'all')
+function get_fatture_roma($year = 'all', $a = '', $s = '', $e = '')
 {
     require __DIR__ . '/../../include/configpdo.php';
 
@@ -2051,6 +2135,9 @@ function get_fatture_roma($year = 'all')
             break;
 
         case 'liquidazione':
+            //formato le date per la query in YYYY-MM-DD
+            $s = date('Y-m-d', strtotime($s));
+            $e = date('Y-m-d', strtotime($e));
             $query = "SELECT 
                 fatture.id AS id_fatt,
                 nome,
@@ -2062,6 +2149,7 @@ function get_fatture_roma($year = 'all')
                 data_scadenza,
                 provv_percent,
                 id_liquidazione,
+                data_pagamento,
                 nome_zona,
                 zone_roma.id_zona
             FROM 
@@ -2073,16 +2161,19 @@ function get_fatture_roma($year = 'all')
             INNER JOIN 
                 zone_roma ON agenti_roma.id_zona = zone_roma.id_zona
             WHERE 
-                fatture.sigla = 'RSC' AND status='paid' AND id_liquidazione IS NULL
-            ";
+                fatture.sigla = 'RSC' AND year(data_f)='$a' AND (fatture.data_pagamento BETWEEN '$s' AND '$e') AND status='paid' AND id_liquidazione IS NULL";
             $stmt = $db->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll();
             break;
+
         default:
-            $query = "SELECT fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione` FROM `fatture` INNER JOIN agenti ON fatture.sigla=agenti.sigla WHERE agenti.id=:id_agente AND YEAR(data_f) = :year ORDER BY `data_f` DESC";
+            $query = "SELECT `nome`, fatture.id AS id_fatt, `num_f`,`imp_netto`,`imp_iva`,`imp_tot`,`data_f`,`data_scadenza`,`provv_percent`,`id_liquidazione`, data_pagamento,
+                nome_zona,
+                zone_roma.id_zona FROM `fatture` INNER JOIN clienti ON fatture.id_cfic = clienti.id_cfic INNER JOIN agenti_roma ON fatture.id_cfic=agenti_roma.id_cfic  INNER JOIN 
+                zone_roma ON agenti_roma.id_zona = zone_roma.id_zona WHERE fatture.sigla = 'RSC' AND YEAR(data_f) = :year ORDER BY `data_f` DESC";
             $stmt = $db->prepare($query);
-            $stmt->bindParam(':id_agente', $id_agente, PDO::PARAM_INT);
+
             $stmt->bindParam(':year', $year, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll();

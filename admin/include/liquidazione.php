@@ -7,6 +7,14 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         case 'liquida':
             $id = $_POST['id_fattura'];
             $id_agente = $_POST['id_agente'];
+            $anno = $_POST['anno'];
+            $start = $_POST['start_date'];
+            $start_formato_originale = DateTime::createFromFormat('d/m/Y',  $start);
+            $start_formato_desiderato = $start_formato_originale->format('Y-m-d');
+
+            $end = $_POST['end_date'];
+            $end_formato_originale = DateTime::createFromFormat('d/m/Y',  $end);
+            $end_formato_desiderato = $end_formato_originale->format('Y-m-d');
             $data_liquidazione = $_POST['data_liquidazione'];
             $data_formato_originale = DateTime::createFromFormat('d/m/Y',  $data_liquidazione);
 
@@ -19,7 +27,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                 $importo += importoliquidzione($id_fattura);
             }
             // $id_liquidazione = setLiquidazione($sigla_agente, $data_formato_desiderato, $importo, $metodo_pagamento, $note);
-            $id_liquidazione = setLiquidazione($sigla_agente, $data_formato_desiderato, $importo);
+            $id_liquidazione = setLiquidazione($sigla_agente, $data_formato_desiderato, $anno, $start_formato_desiderato, $end_formato_desiderato, $importo);
             //aggiorno le fatture con l'id della liquidazione
             foreach ($id as $id_fattura) {
                 updateFattureLiquidazione($id_liquidazione, $id_fattura);
@@ -27,11 +35,32 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             echo $id_liquidazione;
 
             break;
-        case 'lista_roma':
 
-            $zone = getTotaleLiquidazioneZoneRoma(); // Prendo tutte le zone
-            foreach ($zone as $zona) {
+        case 'liquida_agente':
+            $id_agente = $_POST['agente'];
+            $fatture_da_liquidare = getFattureDaLiquidareAgente($id_agente);
+            foreach ($fatture_da_liquidare as $fattura) {
+                $provvigione = arrotondaEFormatta($fattura['provvigione']);
 ?>
+                <tr>
+                    <td><?= $fattura['nome_cliente'] ?></td>
+                    <td>N° <?= $fattura['num_f'] ?> del<br> <?= date('d/m/Y', strtotime($fattura['data_f'])) ?></td>
+                    <td><?= arrotondaEFormatta($fattura['imp_netto']) ?> €</td>
+                    <td><?= $fattura['provv_percent'] ?> %</td>
+                    <td><?= $provvigione ?> €</td>
+                    <td><i class="fe fe-check-square text-success li-scelta inclusa" data-id="<?= $fattura['id_fatt'] ?>" data-importo="<?= $provvigione ?>" data-bs-toggle="tooltip" title="" data-bs-original-title="fe fe-check-square" aria-label="fe fe-check-square"></i></td>
+                </tr>
+            <?php
+            }
+            break;
+        case 'lista_roma':
+            $start = $_POST['start_date'];
+            $end = $_POST['end_date'];
+            $anno = $_POST['anno'];
+
+            $zone = getTotaleLiquidazioneZoneRoma($anno, $start, $end); // Prendo tutte le zone
+            foreach ($zone as $zona) {
+            ?>
                 <tr>
                     <td><?= $zona['nome'] ?></td>
                     <td><?= arrotondaEFormatta($zona['a']) ?> €</td>
@@ -43,8 +72,37 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             }
 
             break;
+
+        case 'totali_roma':
+            $agenti = 0;
+            $agenzia = 0;
+            $start = $_POST['start_date'];
+            $end = $_POST['end_date'];
+            $anno = $_POST['anno'];
+            $zone = getTotaleLiquidazioneZoneRoma($anno, $start, $end); // Prendo tutte le zone
+            foreach ($zone as $zona) {
+                $agenti = $agenti + $zona['a'];
+                $agenzia = $agenzia + $zona['b'];
+            }
+            //ritorno i totali in json
+            echo json_encode(array('agenti' => $agenti, 'agenzia' => $agenzia));
+
+
+            break;
         case 'liquida_zona':
-            $id = $_POST['id_fattura'];
+            $id = $_POST['id_fattura']; // Id delle fatture da liquidare
+            $agente = $_POST['agente']; // Id dell'agente
+            $agenzia = $_POST['agenzia']; // Id dell'agenzia 
+            $anno = $_POST['anno']; //anno di riferimento
+            //periodo iniziale pagamento
+            $start = $_POST['start_date'];
+            $start_formato_originale = DateTime::createFromFormat('d-m-Y',  $start);
+            $start_formato_desiderato = $start_formato_originale->format('Y-m-d');
+            //periodo finale pagamento
+            $end = $_POST['end_date'];
+            $end_formato_originale = DateTime::createFromFormat('d-m-Y',  $end);
+            $end_formato_desiderato = $end_formato_originale->format('Y-m-d');
+
             $sigla_agente = 'RSC';
             // $metodo_pagamento = $_POST['metodo_pagamento'];
             // $note = $_POST['note'];
@@ -53,13 +111,13 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
 
             // Ottieni la data nel formato desiderato "anno mese giorno"
             $data_formato_desiderato = $data_formato_originale->format('Y-m-d');
-            $importo = 0;
+            $importo = $agente + $agenzia;
             //Ricavo la sigla agente dal suo id
-            $importo = 0;
+
             // foreach ($id as $id_fattura) {
             //     $importo += importoliquidzione($id_fattura);
             // }
-            $id_liquidazione = setLiquidazione($sigla_agente, $data_formato_desiderato, $importo);
+            $id_liquidazione = setLiquidazione($sigla_agente, $data_formato_desiderato, $anno, $start_formato_desiderato, $end_formato_desiderato, $importo);
             //aggiorno le fatture con l'id della liquidazione
             foreach ($id as $id_fattura) {
                 updateFattureLiquidazione($id_liquidazione, $id_fattura);
@@ -292,6 +350,10 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
 <?php
                 }
             }
+            break;
+
+
+        case 'anteprima_roma':
             break;
         default:
             # code...

@@ -23,9 +23,12 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
         if ($row['provv_percent'] == 1) {
             $prov_agente = arrotondaEFormatta($provv / 2) . ' €';
             $prov_agenzia = arrotondaEFormatta($provv / 2) . ' €';
-        } else {
+        } elseif ($row['provv_percent'] == 2) {
             $prov_agente = '';
             $prov_agenzia = arrotondaEFormatta($provv) . ' €';
+        } elseif ($row['provv_percent'] == 4) {
+            $prov_agente = arrotondaEFormatta($row['imp_netto'] * 9 / 100) . ' €';
+            $prov_agenzia = arrotondaEFormatta($row['imp_netto'] * 7 / 100) . ' €';
         }
         echo json_encode(array('provv_agente' => $prov_agente, 'provv_agenzia' => $prov_agenzia));
     } catch (PDOException $e) {
