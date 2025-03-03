@@ -77,7 +77,11 @@ if (isset($_GET['c'])) {
                     </div><!-- col-6 -->
                 </div>
                 <?php if (!empty($dati_cliente)) :
-                    $imponibile = imponibilePerClienteTotale($id_del_cliente); ?>
+                    //anno corrente
+                    $anno_corrente = date('Y');
+                    $imponibile = imponibilePerClienteTotale($id_del_cliente, $anno_corrente);
+                    $imponibile_precedente = imponibilePerClienteTotale($id_del_cliente, $anno_corrente - 1);
+                ?>
                     <div class="row row-sm">
                         <div class="col-md-6">
                             <div class="row">
@@ -85,13 +89,13 @@ if (isset($_GET['c'])) {
                                     <div class="card overflow-hidden sales-card bg-primary-gradient">
                                         <div class="px-3 pt-3  pb-2 pt-0">
                                             <div class="">
-                                                <h6 class="mb-3 tx-12 text-white">IMPONIBILE TOTALE CLIENTE</h6>
+                                                <h6 class="mb-3 tx-12 text-white">IMPONIBILE CLIENTE</h6>
                                             </div>
                                             <div class="pb-0 mt-0">
                                                 <div class="d-flex">
                                                     <div class="">
-                                                        <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $imponibile['totale'] ?></h4>
-                                                        <p class="mb-0 tx-12 text-white op-7">Totale complessivo generato</p>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente ?>: € <?= $imponibile['totale'] ?></h4>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente - 1 ?>: € <?= $imponibile_precedente['totale'] ?></h4>
                                                     </div>
                                                 </div>
                                             </div>
@@ -107,8 +111,8 @@ if (isset($_GET['c'])) {
                                             <div class="pb-0 mt-0">
                                                 <div class="d-flex">
                                                     <div class="">
-                                                        <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $imponibile['totale_pagato'] ?></h4>
-                                                        <p class="mb-0 tx-12 text-white op-7">Totale complessivo pagato</p>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente ?>: € <?= $imponibile['totale_pagato'] ?></h4>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente - 1 ?>: € <?= $imponibile_precedente['totale_pagato'] ?></h4>
                                                     </div>
                                                 </div>
                                             </div>
@@ -125,8 +129,8 @@ if (isset($_GET['c'])) {
                                             <div class="pb-0 mt-0">
                                                 <div class="d-flex">
                                                     <div class="">
-                                                        <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $imponibile['totale_non_pagato'] ?></h4>
-                                                        <p class="mb-0 tx-12 text-white op-7">Alla data di oggi</p>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente ?>: € <?= $imponibile['totale_non_pagato'] ?></h4>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente - 1 ?>: € <?= $imponibile_precedente['totale_non_pagato'] ?></h4>
                                                     </div>
                                                 </div>
                                             </div>
@@ -142,8 +146,8 @@ if (isset($_GET['c'])) {
                                             <div class="pb-0 mt-0">
                                                 <div class="d-flex">
                                                     <div class="">
-                                                        <h4 class="tx-20 fw-bold mb-1 text-white">€ <?= $imponibile['totale_non_pagato_scaduto'] ?></h4>
-                                                        <p class="mb-0 tx-12 text-white op-7">Alla data di oggi</p>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente ?>: € <?= $imponibile['totale_non_pagato_scaduto'] ?></h4>
+                                                        <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno_corrente - 1 ?>: € <?= $imponibile_precedente['totale_non_pagato_scaduto'] ?></h4>
                                                     </div><span class="float-end my-auto ms-auto">
                                                         <button class="btn btn-primary btn-sm vedi_scaduti_cliente" data-id="<?= $id_del_cliente ?>"><i class="fe fe-eye text-white"></i></button>
                                                     </span>

@@ -18,7 +18,7 @@ if (isset($_GET['a'])) {
     $anno = date('Y');
 }
 if (isset($_GET['id'])) {
-    $id = $_GET['id']; //id dell'agente
+    $id_agente = $_GET['id']; //id dell'agente
 }
 //inizializzo l'array delle fatture
 $array_id_fattura = [];
@@ -110,7 +110,7 @@ $array_id_fattura = [];
                         <div class="col-xl-12 col-lg-12 col-md-12 col-xm-12">
                             <!-- Una card con la tabella di tutte le fatture che potrebbero essere liquidate -->
                             <?php
-                            $fatture = get_fatture_agente($id, 'def', $anno, $data_iniziale, $data_finale);
+                            $fatture = get_fatture_agente($id_agente, 'def', $anno, $data_iniziale, $data_finale);
                             ?>
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -294,8 +294,33 @@ $array_id_fattura = [];
     $('#basic-edittable a').editable({
         type: 'select',
         name: 'provv_percent',
-        value: 16,
+        value: 15,
         source: [{
+                value: 5,
+                text: '5 %'
+            }, {
+                value: 6,
+                text: '6 %'
+            }, {
+                value: 7,
+                text: '7 %'
+            },
+            {
+                value: 8,
+                text: '8 %'
+            },
+            {
+                value: 9,
+                text: '9 %'
+            },
+            {
+                value: 10,
+                text: '10 %'
+            },
+            {
+                value: 11,
+                text: '11 %'
+            }, {
                 value: 12,
                 text: '12 %'
             },
@@ -349,26 +374,26 @@ $array_id_fattura = [];
     });
 
     //Quando finisco di caricare la pagina
-    $(document).ready(function() {
-        var sommaImporti = calcolaSommaImporti();
-        //Se importo liquidazSe importo liquidazione è zero disattivo
-        if (sommaImporti == 0) {
-            $('.liquida_provv').prop('disabled', true);
-        } else {
-            $('.liquida_provv').prop('disabled', false);
-        }
-    });
+    // $(document).ready(function() {
+    //     var sommaImporti = calcolaSommaImporti();
+    //     //Se importo liquidazSe importo liquidazione è zero disattivo
+    //     if (sommaImporti == 0) {
+    //         $('.liquida_provv').prop('disabled', true);
+    //     } else {
+    //         $('.liquida_provv').prop('disabled', false);
+    //     }
+    // });
 
-    function calcolaSommaImporti() {
-        var sommaImporti = 0;
+    // function calcolaSommaImporti() {
+    //     var sommaImporti = 0;
 
-        $('.inclusa').each(function() {
-            var importo = parseFloat($(this).data('importo')) || 0;
-            sommaImporti += importo;
-        });
+    //     $('.inclusa').each(function() {
+    //         var importo = parseFloat($(this).data('importo')) || 0;
+    //         sommaImporti += importo;
+    //     });
 
-        return sommaImporti;
-    }
+    //     return sommaImporti;
+    // }
 
     $(document).ready(function() {
         $('#start-date').datepicker({
@@ -393,7 +418,7 @@ $array_id_fattura = [];
         var start_date = $('#start-date').val();
         var end_date = $('#end-date').val();
         var anno = $('#anno').val();
-        var id = <?= $id ?>;
+        var id = <?= $id_agente ?>;
         window.location.href = 'agenti-liquidazione.php?id=' + id + '&a=' + anno + '&s=' + start_date + '&e=' + end_date;
     });
 
@@ -406,8 +431,8 @@ $array_id_fattura = [];
         var periodo_a = $('#end-date').val();
         var fatture = <?= json_encode($array_id_fattura) ?>; //array con le fatture da liquidare
         var fattureJson = encodeURIComponent(JSON.stringify(fatture));
-        var agente = <?= $id ?>;
-        console.log(anno + ' ' + periodo_da + ' ' + periodo_a + ' ' + fattureJson + ' ' + agente);
+        var agente = <?= $id_agente ?>;
+
         // Apro una nuova scheda con il PDF
         window.open('pdf_agenti_anteprima.php?fatture=' + fattureJson + '&anno=' + anno + '&start=' + periodo_da + '&end=' + periodo_a + '&id=' + agente, '_blank');
     });
@@ -468,7 +493,7 @@ $array_id_fattura = [];
         var start_date = $('#start-date').val();
         var end_date = $('#end-date').val();
         var anno = $('#anno').val();
-        var agente = <?= $id ?>;
+        var agente = <?= $id_agente ?>;
         $.ajax({
             url: 'include/liquidazione.php',
             type: 'POST',
@@ -485,55 +510,64 @@ $array_id_fattura = [];
         });
         $('#modal-liquidazione').modal('show');
     });
-    // $(document).on('click', '.liquida_provv', function(e) {
-    //     e.preventDefault();
-    //     //Disabilito il bottone
-    //     $('.liquida_provv').prop('disabled', true);
-    //     var metodo_pagamento = $('#metodo_pagamento').val();
-    //     var note = $('#note').val();
-    //     var data_liquidazione = $('#data_liquidazione').val();
-    //     var importo_liquidazione = $('#importo_liquidazione').text();
-    //     var fatture = [];
-    //     $('.inclusa').each(function() {
-    //         var id_fattura = $(this).data('id');
-    //         fatture.push(id_fattura);
-    //     });
-    //     $.ajax({
-    //         url: 'include/liquidazione.php',
-    //         type: 'POST',
-    //         data: {
-    //             id_fattura: fatture,
-    //             id_agente: id,
-    //             metodo_pagamento: metodo_pagamento,
-    //             note: note,
-    //             data_liquidazione: data_liquidazione,
-    //             importo_liquidazione: importo_liquidazione,
-    //             tipo: 'liquida'
-    //         },
-    //         success: function(response) {
-    //             var id_fattura = response;
-    //             //Chiudo il model
-    //             $('#modal-liquidazione').modal('hide');
-    //             //Success Message
-    //             Swal.fire({
-    //                 title: "Well done!",
-    //                 text: 'Liquidazione registrata!',
-    //                 icon: 'success',
-    //                 showCancelButton: true,
-    //                 confirmButtonText: 'Vedi PDF',
-    //                 cancelButtonText: 'Esci',
-    //                 confirmButtonColor: '#57a94f'
-    //             }).then((result) => {
-    //                 /* Read more about isConfirmed, isDenied below */
-    //                 if (result.isConfirmed) {
-    //                     //apro  una nuova scheda con il pdf
-    //                     window.open('pdf.php?id_fattura=' + id_fattura, '_blank');
-    //                 }
-    //             });
-    //         },
-    //         error: function(error) {
-    //             console.error('Errore durante la chiamata AJAX:', error);
-    //         }
-    //     });
-    // });
+
+    $(document).on('click', '.liquida_provv', function(e) {
+        e.preventDefault();
+        //Disabilito il bottone
+        $('.liquida_provv').prop('disabled', true);
+        var metodo_pagamento = $('#metodo_pagamento').val();
+        var note = $('#note').val();
+        var data_liquidazione = $('#data_liquidazione').val();
+        var data_start = '<?= $data_iniziale ?>';
+        var data_end = '<?= $data_finale ?>';
+        var importo_liquidazione = $('#importo_liquidazione').text();
+        var fatture = [];
+        $('.inclusa').each(function() {
+            var id_fattura = $(this).data('id');
+            fatture.push(id_fattura);
+        });
+        var id = <?= $id_agente ?>;
+
+        $.ajax({
+            url: 'include/liquidazione.php',
+            type: 'POST',
+            data: {
+                id_fattura: fatture,
+                id_agente: id,
+                anno: <?= $anno ?>,
+                // metodo_pagamento: metodo_pagamento,
+                // note: note,
+                data_liquidazione: data_liquidazione,
+                start_date: data_start,
+                end_date: data_end,
+                importo_liquidazione: importo_liquidazione,
+                tipo: 'liquida'
+            },
+            dataType: 'html',
+            success: function(response) {
+                console.log(response);
+                //Chiudo il model
+                $('#modal-liquidazione').modal('hide');
+                //Success Message
+                Swal.fire({
+                    title: "Well done!",
+                    text: 'Liquidazione registrata!',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonText: 'Vedi PDF',
+                    cancelButtonText: 'Esci',
+                    confirmButtonColor: '#57a94f'
+                }).then((result) => {
+                    /* Read more about isConfirmed, isDenied below */
+                    if (result.isConfirmed) {
+                        //apro  una nuova scheda con il pdf
+                        window.open('pdf.php?id_liquidazione=' + response, '_blank');
+                    }
+                });
+            },
+            error: function(error) {
+                console.error('Errore durante la chiamata AJAX:', error);
+            }
+        });
+    });
 </script>

@@ -138,18 +138,26 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                 c.id_cfic,
                 c.nome AS cliente,
                 c.provincia,
-                SUM(f.imp_netto) AS totale_imponibile_netto
+                SUM(f.imp_netto) AS totale_imponibile_netto,
+        COUNT(f.id) AS numero_fatture,
+    SUM(p.qta) AS numero_bottiglie
             FROM
                 clienti c
             JOIN
                 fatture f ON c.id_cfic = f.id_cfic
+LEFT JOIN (
+    SELECT id_ffic, SUM(qta) AS qta
+    FROM prodotti
+    GROUP BY id_ffic
+) p ON f.id_ffic = p.id_ffic
             WHERE
                 YEAR(f.data_f) = :anno
                 AND c.provincia = :pv
+                AND f.ie='1'
             GROUP BY
                 c.id_cfic, c.nome, c.provincia
             ORDER BY
-                totale_imponibile_netto DESC;";
+                totale_imponibile_netto DESC";
                 $stmt = $db->prepare($query);
                 $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
                 $stmt->bindParam(':pv', $pv, PDO::PARAM_STR);
@@ -161,6 +169,8 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                     echo '<tr>';
                     echo '<th>Cliente</th>';
                     echo '<th>Imponibile</th>';
+                    echo '<th>n.fatt</th>';
+                    echo '<th>n.bott</th>';
                     echo '<th></th>';
                     echo '</tr>';
                     echo '</thead>';
@@ -169,6 +179,73 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
                         echo '<tr>';
                         echo '<td>' . $row['cliente'] . '</td>';
                         echo '<td> € ' . arrotondaEFormatta($row['totale_imponibile_netto']) . '</td>';
+                        echo '<td class="tx-right tx-medium tx-inverse">' . $row['numero_fatture'] . '</td>';
+                        echo '<td class="tx-right tx-medium tx-inverse">' . $row['numero_bottiglie'] . ' bt</td>';
+                        echo '<td><a href="analisi-clienti.php?c=' . $row['id_cfic'] . '" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>';
+                        echo '</tr>';
+                    }
+                    echo '</tbody>';
+                    echo '</table>';
+                } else {
+                    echo '<tr><td colspan="6">Nessun risultato</td></tr>';
+                }
+            } catch (PDOException $e) {
+                echo "Error : " . $e->getMessage();
+            }
+            break;
+        case 'vedi_paese':
+
+            $pv = $_POST['pv'];
+            $anno = $_POST['anno'];
+            try {
+                $query = "SELECT
+                    c.id_cfic,
+                    c.nome AS cliente,
+                    SUM(f.imp_netto) AS totale_imponibile_netto,
+            COUNT(f.id) AS numero_fatture,
+        SUM(p.qta) AS numero_bottiglie
+                FROM
+                    clienti c
+                JOIN
+                    fatture f ON c.id_cfic = f.id_cfic
+                    LEFT JOIN (
+    SELECT id_ffic, SUM(qta) AS qta
+    FROM prodotti 
+    GROUP BY id_ffic
+) p ON f.id_ffic = p.id_ffic
+                WHERE
+                    YEAR(f.data_f) = :anno
+                    AND c.paese = :pv
+                    AND f.ie='1'
+                    AND f.status_invio='sent'
+                     AND f.sigla!='WINE SHOP'
+                GROUP BY
+                    c.id_cfic, c.paese
+                ORDER BY
+                    totale_imponibile_netto DESC";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+                $stmt->bindParam(':pv', $pv, PDO::PARAM_STR);
+                $stmt->execute();
+                $dati   = $stmt->fetchAll();
+                if (!empty($dati)) {
+                    echo  '<table class="table table-striped mg-b-0 text-md-nowrap">';
+                    echo '<thead>';
+                    echo '<tr>';
+                    echo '<th>Cliente</th>';
+                    echo '<th>Imponibile</th>';
+                    echo '<th>n.fatt</th>';
+                    echo '<th>n.bott</th>';
+                    echo '<th></th>';
+                    echo '</tr>';
+                    echo '</thead>';
+                    echo '<tbody>';
+                    foreach ($dati as $row) {
+                        echo '<tr>';
+                        echo '<td>' . $row['cliente'] . '</td>';
+                        echo '<td> € ' . arrotondaEFormatta($row['totale_imponibile_netto']) . '</td>';
+                        echo '<td class="tx-right tx-medium tx-inverse">' . $row['numero_fatture'] . '</td>';
+                        echo '<td class="tx-right tx-medium tx-inverse">' . $row['numero_bottiglie'] . ' bt</td>';
                         echo '<td><a href="analisi-clienti.php?c=' . $row['id_cfic'] . '" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>';
                         echo '</tr>';
                     }
@@ -182,6 +259,75 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
             }
             break;
 
+        case 'wineshop':
+            $pv = $_POST['pv'];
+            $paese = $_POST['paese'];
+            $anno = $_POST['anno'];
+            try {
+                $query = "SELECT
+                        c.id_cfic,
+                        c.nome AS cliente,
+                        SUM(f.imp_netto) AS totale_imponibile_netto,
+                COUNT(f.id) AS numero_fatture,
+            SUM(p.qta) AS numero_bottiglie
+                    FROM
+                        clienti c
+                         JOIN 
+    province pr ON c.provincia = pr.pv
+                    JOIN
+                        fatture f ON c.id_cfic = f.id_cfic
+                        LEFT JOIN (
+        SELECT id_ffic, SUM(qta) AS qta
+        FROM prodotti 
+        GROUP BY id_ffic
+    ) p ON f.id_ffic = p.id_ffic
+                    WHERE
+                        YEAR(f.data_f) = :anno
+                        AND c.paese = :paese
+                        AND pr.nome_provincia = :pv
+                        AND f.ie='1'
+                        AND f.status_invio='sent'
+                         AND f.sigla='WINE SHOP'
+                    GROUP BY
+                        c.id_cfic, c.paese
+                    ORDER BY
+                        totale_imponibile_netto DESC";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':anno', $anno, PDO::PARAM_STR);
+                $stmt->bindParam(':pv', $pv, PDO::PARAM_STR);
+                $stmt->bindParam(':paese', $paese, PDO::PARAM_STR);
+                $stmt->execute();
+                $dati   = $stmt->fetchAll();
+                if (!empty($dati)) {
+                    echo  '<table class="table table-striped mg-b-0 text-md-nowrap">';
+                    echo '<thead>';
+                    echo '<tr>';
+                    echo '<th>Cliente</th>';
+                    echo '<th>Imponibile</th>';
+                    echo '<th>n.fatt</th>';
+                    echo '<th>n.bott</th>';
+                    echo '<th></th>';
+                    echo '</tr>';
+                    echo '</thead>';
+                    echo '<tbody>';
+                    foreach ($dati as $row) {
+                        echo '<tr>';
+                        echo '<td>' . $row['cliente'] . '</td>';
+                        echo '<td> € ' . arrotondaEFormatta($row['totale_imponibile_netto']) . '</td>';
+                        echo '<td class="tx-right tx-medium tx-inverse">' . $row['numero_fatture'] . '</td>';
+                        echo '<td class="tx-right tx-medium tx-inverse">' . $row['numero_bottiglie'] . ' bt</td>';
+                        echo '<td><a href="analisi-clienti.php?c=' . $row['id_cfic'] . '" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>';
+                        echo '</tr>';
+                    }
+                    echo '</tbody>';
+                    echo '</table>';
+                } else {
+                    echo '<tr><td colspan="6">Nessun risultato</td></tr>';
+                }
+            } catch (PDOException $e) {
+                echo "Error : " . $e->getMessage();
+            }
+            break;
         default:
             # code...
             break;

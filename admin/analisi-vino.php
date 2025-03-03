@@ -139,6 +139,25 @@ $varieta_vino = 'cabernet';
                             </div>
                         </div>
                     </div>
+                    <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
+                        <div class="card overflow-hidden sales-card bg-success-gradient">
+                            <div class="px-3 pt-3  pb-2 pt-0">
+                                <div class="">
+                                    <h6 class="mb-3 tx-12 text-white">Altri formati</h6>
+                                </div>
+                                <div class="pb-0 mt-0">
+                                    <div class="d-flex">
+                                        <div class="">
+                                            <h4 class="tx-20 fw-bold mb-1 text-white">BT <?= $tipo['quantita_3l'] + $tipo['quantita_6l'] ?></h4>
+                                        </div>
+                                        <span class="float-end my-auto ms-auto">
+                                            <span class="text-white op-7"> <?= number_format($tipo['percentuale_3l'] + $tipo['percentuale_6l'], 2) ?>%</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
                 <!-- row closed -->
@@ -211,13 +230,13 @@ $varieta_vino = 'cabernet';
                 <!-- row -->
                 <?php
 
-                $array = array('cabernet', 'filorosso', 'pinot nero', 'chardonnay',  'friulano', 'malvasia', 'pinot grigio',  'ribolla', 'sauvignon');
+                $array = array('cabernet', 'filorosso', 'pinot nero', 'refosco', 'chardonnay',  'friulano', 'malvasia', 'pinot grigio',  'ribolla', 'sauvignon');
                 ?>
                 <div class="row row-sm">
                     <?php
                     foreach ($array as $varieta_vino) {
                         $varieta = $varieta_totale[$varieta_vino];
-                        $colore = in_array($varieta_vino, ['cabernet', 'filorosso', 'pinot nero']) ? 'text-danger' : 'text-warning';
+                        $colore = in_array($varieta_vino, ['cabernet', 'filorosso', 'pinot nero', 'refosco']) ? 'text-danger' : 'text-warning';
                     ?>
                         <div class=" col-md-4 col-lg-4 col-xl-4">
                             <div class="card">

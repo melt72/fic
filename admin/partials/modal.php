@@ -133,7 +133,8 @@
 								</div>
 							</div>
 							<div class="col-md-6 mg-t-25">
-								<h2>IMPORTO: <span id="importo_liquidazione"><?= isset($id_agente) ? arrotondaEFormatta(getTotaleLiquidazioneAgente($id_agente)) : '' ?></span> €</h2>
+								<h2>IMPORTO: <span id="importo_liquidazione"><?= isset($id_agente) && ($id_agente != 0) && (isset($data_iniziale)) ? arrotondaEFormatta(getTotaleLiquidazioneAgente($id_agente, $data_iniziale, $data_finale)) : '' ?>
+									</span> €</h2>
 							</div>
 						</div>
 

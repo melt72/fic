@@ -1308,6 +1308,57 @@ $(document).on('click', '.vedi-provincia', function(event) {
 	$('#modal-generico').modal('show');
 });
 
+$(document).on('click', '.vedi-paese', function(event) {
+	event.preventDefault();
+	//Leggo il valore data PV
+	var pv = $(this).attr("data-pv");
+	//Genero i dati tramite ajax
+	$.ajax({
+		type: "post",
+		url: "include/imponibile.php",
+		data: {
+			tipo: 'vedi_paese',
+			pv: pv,
+			anno: anno,
+		},
+		dataType: "html",
+		success: function(response) {
+			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+			//Cambio il titolo del model
+			$('#modal-generico .modal-title').html('Clienti stato ' + pv);
+			$('#modal-generico .modal-body').html(response);
+			$('#modal-generico .modal-footer').html('');
+		}
+	});
+	$('#modal-generico').modal('show');
+});
+
+$(document).on('click', '.wineshop', function(event) {
+	event.preventDefault();
+	//Leggo il valore data PV
+	var paese = $(this).attr("data-paese");
+	var provincia = $(this).attr("data-pv");
+	//Genero i dati tramite ajax
+	$.ajax({
+		type: "post",
+		url: "include/imponibile.php",
+		data: {
+			tipo: 'wineshop',
+			pv: provincia,
+			paese: paese,
+			anno: anno,
+		},
+		dataType: "html",
+		success: function(response) {
+			//Inserisco i valori json nel div #tab-zone e #tab-content-zone
+			//Cambio il titolo del model
+			$('#modal-generico .modal-title').html('Clienti stato ' + provincia);
+			$('#modal-generico .modal-body').html(response);
+			$('#modal-generico .modal-footer').html('');
+		}
+	});
+	$('#modal-generico').modal('show');
+});
 //Quando schiaccio sul bottone Un classe vedi_scaduti_cliente Apro il model generico
 $(document).on('click', '.vedi_scaduti_cliente', function(event) {
 	event.preventDefault();

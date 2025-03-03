@@ -148,155 +148,191 @@ if (isset($_GET['a'])) {
                 <?php
                 $trimestre = analisiImponibileTrimestre($anno);
                 $trimestrePrecedente = analisiImponibileTrimestre($anno - 1);
+                foreach ($trimestrePrecedente as $key => $value) {
+                    if ($value === 'N/A') {
+                        $trimestrePrecedente[$key] = 1;
+                    }
+                }
                 ?>
                 <div class="row row-sm">
-                    <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
-                        <div class="card overflow-hidden sales-card">
-                            <div class="px-3 pt-3  pb-2 pt-0">
-                                <div class="">
-                                    <h6 class="mb-3 tx-12 text-white">I trimestre</h6>
-                                </div>
-                                <div class="pb-0 mt-0">
-                                    <div class="d-flex">
+                    <div class="col-md-6">
+                        <div class="row row-sm">
+                            <div class="col-md-6 col-xm-12">
+                                <div class="card overflow-hidden sales-card">
+                                    <div class="px-3 pt-3  pb-2 pt-0">
                                         <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['1'] ?></h4>
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['1'] ?></h4>
+                                            <h6 class="mb-3 tx-12 text-white">I trimestre</h6>
                                         </div>
-                                        <span class="float-end my-auto ms-auto">
-                                            <?php
-                                            try {
-                                                $perc = round((floatval($trimestre['1']) - floatval($trimestrePrecedente['1'])) / floatval($trimestrePrecedente['1']) * 100);
-                                            } catch (DivisionByZeroError $e) {
-                                                $perc = 0;
-                                            }
-                                            //se la percentuale è positiva
-                                            if ($perc > 0) {
-                                                $icona = "fas fa-arrow-circle-up text-success";
-                                                $colore = "bg-success";
-                                            } else {
-                                                $icona = "fas fa-arrow-circle-down text-danger";
-                                                $colore = "bg-danger";
-                                            }
-                                            ?>
-                                            <i class="<?= $icona ?>"></i>
-                                            <span class="text-white op-7"> <?= $perc ?> %</span>
-                                        </span>
+                                        <div class="pb-0 mt-0">
+                                            <div class="d-flex">
+                                                <div class="">
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['1'] ?></h4>
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['1'] ?></h4>
+                                                </div>
+                                                <span class="float-end my-auto ms-auto">
+                                                    <?php
+                                                    if ($trimestrePrecedente['1'] == 0) {
+                                                        $perc = 100;
+                                                    }
+                                                    $perc = round((floatval($trimestre['1']) - floatval($trimestrePrecedente['1'])) / floatval($trimestrePrecedente['1']) * 100);
+                                                    //se la percentuale è positiva
+                                                    if ($perc > 0) {
+                                                        $icona = "fas fa-arrow-circle-up text-success";
+                                                        $colore = "bg-success";
+                                                    } else {
+                                                        $icona = "fas fa-arrow-circle-down text-danger";
+                                                        $colore = "bg-danger";
+                                                    }
+                                                    ?>
+                                                    <i class="<?= $icona ?>"></i>
+                                                    <span class="text-white op-7"> <?= $perc ?> %</span>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
-                        <div class="card overflow-hidden sales-card">
-                            <div class="px-3 pt-3  pb-2 pt-0">
-                                <div class="">
-                                    <h6 class="mb-3 tx-12 text-white">II Trimestre</h6>
-                                </div>
-                                <div class="pb-0 mt-0">
-                                    <div class="d-flex">
+                            <div class="col-md-6 col-xm-12">
+                                <div class="card overflow-hidden sales-card">
+                                    <div class="px-3 pt-3  pb-2 pt-0">
                                         <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['2'] ?></h4>
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['2'] ?></h4>
+                                            <h6 class="mb-3 tx-12 text-white">II Trimestre</h6>
                                         </div>
-                                        <span class="float-end my-auto ms-auto">
-                                            <?php
-                                            try {
-                                                $perc = round((floatval($trimestre['2']) - floatval($trimestrePrecedente['2'])) / floatval($trimestrePrecedente['2']) * 100);
-                                            } catch (DivisionByZeroError $e) {
-                                                $perc = 0;
-                                            }
-                                            //se la percentuale è positiva
-                                            if ($perc > 0) {
-                                                $icona = "fas fa-arrow-circle-up text-success";
-                                                $colore = "bg-success";
-                                            } else {
-                                                $icona = "fas fa-arrow-circle-down text-danger";
-                                                $colore = "bg-danger";
-                                            }
-                                            ?>
-                                            <i class="<?= $icona ?>"></i>
-                                            <span class="text-white op-7"> <?= $perc ?> %</span>
-                                        </span>
-                                    </div>
+                                        <div class="pb-0 mt-0">
+                                            <div class="d-flex">
+                                                <div class="">
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['2'] ?></h4>
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['2'] ?></h4>
+                                                </div>
+                                                <span class="float-end my-auto ms-auto">
+                                                    <?php
+                                                    $perc = round((floatval($trimestre['2']) - floatval($trimestrePrecedente['2'])) / floatval($trimestrePrecedente['2']) * 100);
+                                                    //se la percentuale è positiva
+                                                    if ($perc > 0) {
+                                                        $icona = "fas fa-arrow-circle-up text-success";
+                                                        $colore = "bg-success";
+                                                    } else {
+                                                        $icona = "fas fa-arrow-circle-down text-danger";
+                                                        $colore = "bg-danger";
+                                                    }
+                                                    ?>
+                                                    <i class="<?= $icona ?>"></i>
+                                                    <span class="text-white op-7"> <?= $perc ?> %</span>
+                                                </span>
+                                            </div>
 
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
-                        <div class="card overflow-hidden sales-card">
-                            <div class="px-3 pt-3  pb-2 pt-0">
-                                <div class="">
-                                    <h6 class="mb-3 tx-12 text-white">III Trimestre</h6>
-                                </div>
-                                <div class="pb-0 mt-0">
-                                    <div class="d-flex">
-                                        <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['3'] ?></h4>
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['3'] ?></h4>
                                         </div>
-                                        <span class="float-end my-auto ms-auto">
-                                            <?php
-                                            try {
-                                                $perc = round((floatval($trimestre['3']) - floatval($trimestrePrecedente['3'])) / floatval($trimestrePrecedente['3']) * 100);
-                                            } catch (DivisionByZeroError $e) {
-                                                $perc = 0;
-                                            }
-                                            //se la percentuale è positiva
-                                            if ($perc > 0) {
-                                                $icona = "fas fa-arrow-circle-up text-success";
-                                                $colore = "bg-success";
-                                            } else {
-                                                $icona = "fas fa-arrow-circle-down text-danger";
-                                                $colore = "bg-danger";
-                                            }
-                                            ?>
-                                            <i class="<?= $icona ?>"></i>
-                                            <span class="text-white op-7"> <?= $perc ?> %</span>
-                                        </span>
                                     </div>
-
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
-                        <div class="card overflow-hidden sales-card">
-                            <div class="px-3 pt-3  pb-2 pt-0">
-                                <div class="">
-                                    <h6 class="mb-3 tx-12 text-white">IV Trimestre</h6>
-                                </div>
-                                <div class="pb-0 mt-0">
-                                    <div class="d-flex">
+                            <div class="col-md-6 col-xm-12">
+                                <div class="card overflow-hidden sales-card">
+                                    <div class="px-3 pt-3  pb-2 pt-0">
                                         <div class="">
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['4'] ?></h4>
-                                            <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['4'] ?></h4>
+                                            <h6 class="mb-3 tx-12 text-white">III Trimestre</h6>
                                         </div>
-                                        <span class="float-end my-auto ms-auto">
-                                            <?php
-                                            try {
-                                                $perc = round((floatval($trimestre['4']) - floatval($trimestrePrecedente['4'])) / floatval($trimestrePrecedente['4']) * 100);
-                                            } catch (DivisionByZeroError $e) {
-                                                $perc = 0;
-                                            }
-                                            //se la percentuale è positiva
-                                            if ($perc > 0) {
-                                                $icona = "fas fa-arrow-circle-up text-success";
-                                                $colore = "bg-success";
-                                            } else {
-                                                $icona = "fas fa-arrow-circle-down text-danger";
-                                                $colore = "bg-danger";
-                                            }
-                                            ?>
-                                            <i class="<?= $icona ?>"></i>
-                                            <span class="text-white op-7"> <?= $perc ?> %</span>
-                                        </span>
-                                    </div>
+                                        <div class="pb-0 mt-0">
+                                            <div class="d-flex">
+                                                <div class="">
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['3'] ?></h4>
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['3'] ?></h4>
+                                                </div>
+                                                <span class="float-end my-auto ms-auto">
+                                                    <?php
+                                                    $perc = round((floatval($trimestre['3']) - floatval($trimestrePrecedente['3'])) / floatval($trimestrePrecedente['3']) * 100);
+                                                    //se la percentuale è positiva
+                                                    if ($perc > 0) {
+                                                        $icona = "fas fa-arrow-circle-up text-success";
+                                                        $colore = "bg-success";
+                                                    } else {
+                                                        $icona = "fas fa-arrow-circle-down text-danger";
+                                                        $colore = "bg-danger";
+                                                    }
+                                                    ?>
+                                                    <i class="<?= $icona ?>"></i>
+                                                    <span class="text-white op-7"> <?= $perc ?> %</span>
+                                                </span>
+                                            </div>
 
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-xm-12">
+                                <div class="card overflow-hidden sales-card">
+                                    <div class="px-3 pt-3  pb-2 pt-0">
+                                        <div class="">
+                                            <h6 class="mb-3 tx-12 text-white">IV Trimestre</h6>
+                                        </div>
+                                        <div class="pb-0 mt-0">
+                                            <div class="d-flex">
+                                                <div class="">
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $trimestre['4'] ?></h4>
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $trimestrePrecedente['4'] ?></h4>
+                                                </div>
+                                                <span class="float-end my-auto ms-auto">
+                                                    <?php
+                                                    $perc = round((floatval($trimestre['4']) - floatval($trimestrePrecedente['4'])) / floatval($trimestrePrecedente['4']) * 100);
+                                                    //se la percentuale è positiva
+                                                    if ($perc > 0) {
+                                                        $icona = "fas fa-arrow-circle-up text-success";
+                                                        $colore = "bg-success";
+                                                    } else {
+                                                        $icona = "fas fa-arrow-circle-down text-danger";
+                                                        $colore = "bg-danger";
+                                                    }
+                                                    ?>
+                                                    <i class="<?= $icona ?>"></i>
+                                                    <span class="text-white op-7"> <?= $perc ?> %</span>
+                                                </span>
+                                            </div>
+
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <?php
+                    $giorno_oggi = analisiTotaleOggi($anno);
+                    ?>
+                    <div class="col-md-6">
+                        <div class="row row-sm">
+                            <div class="col-md-12 col-xm-12">
+                                <div class="card overflow-hidden sales-card">
+                                    <div class="px-3 pt-3  pb-2 pt-0">
+                                        <div class="">
+                                            <h6 class="mb-3 tx-12 text-white">Alla giornata di oggi</h6>
+                                        </div>
+                                        <div class="pb-0 mt-0">
+                                            <div class="d-flex">
+                                                <div class="">
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno ?>: € <?= $giorno_oggi['current_year'] ?></h4>
+                                                    <h4 class="tx-20 fw-bold mb-1 text-white"><?= $anno - 1 ?>: € <?= $giorno_oggi['previous_year'] != '' ? $giorno_oggi['previous_year'] : '' ?></h4>
+                                                </div>
+                                                <span class="float-end my-auto ms-auto">
+                                                    <?php
+                                                    $perc = round((floatval($giorno_oggi['current_year']) - floatval($giorno_oggi['previous_year'])) / floatval($giorno_oggi['previous_year']) * 100);
+                                                    //se la percentuale è positiva
+                                                    if ($perc > 0) {
+                                                        $icona = "fas fa-arrow-circle-up text-success";
+                                                        $colore = "bg-success";
+                                                    } else {
+                                                        $icona = "fas fa-arrow-circle-down text-danger";
+                                                        $colore = "bg-danger";
+                                                    }
+                                                    ?>
+                                                    <i class="<?= $icona ?>"></i>
+                                                    <span class="text-white op-7"> <?= $perc ?> %</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <!-- row closed -->
                 <?php
@@ -327,6 +363,7 @@ if (isset($_GET['a'])) {
                             <?php
                             $analisiMese = analisiImponibile($anno);
                             $analisiMesePrecedente = analisiImponibile($anno - 1);
+                            $analisiMesePrecedente2 = analisiImponibile($anno - 2);
                             ?>
                             <div class="card-body b-p-apex">
                                 <div class="total-revenue">
@@ -335,8 +372,10 @@ if (isset($_GET['a'])) {
                                         <label><span class="bg-primary"></span>Imponibile <?= $anno ?></label>
                                     </div>
                                     <div>
-
                                         <label><span class="bg-warning"></span>Imponibile <?= $anno - 1 ?></label>
+                                    </div>
+                                    <div>
+                                        <label><span class="bg-danger"></span>Imponibile <?= $anno - 2 ?></label>
                                     </div>
                                 </div>
                                 <div id="bar" class="sales-bar mt-4"></div>
@@ -350,7 +389,7 @@ if (isset($_GET['a'])) {
                         <div class="card">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between">
-                                    <h3 class="card-title">Province</h3>
+                                    <h3 class="card-title">ITALIA / Province HO.RE.CA.</h3>
                                 </div>
                             </div><!-- card-header -->
                             <div class="card-body p-0">
@@ -358,9 +397,10 @@ if (isset($_GET['a'])) {
                                     <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
                                         <thead>
                                             <tr>
-                                                <th class="wd-lg-50p">Provincia</th>
+                                                <th class="wd-lg-25p">Provincia</th>
                                                 <th class="wd-lg-25p tx-right">Imponibile</th>
-
+                                                <th>n° fatture</th>
+                                                <th>n° bottiglie</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -372,6 +412,8 @@ if (isset($_GET['a'])) {
                                                 <tr>
                                                     <td><?= $riga['nome_provincia']; ?></td>
                                                     <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
+                                                    <td class="tx-right tx-medium tx-inverse"><?= $riga['numero_fatture']; ?></td>
+                                                    <td class="tx-right tx-medium tx-inverse"><?= $riga['numero_bottiglie']; ?> bt</td>
                                                     <td class="tx-right tx-medium tx-inverse"><button class="btn btn-info btn-icon me-2 btn-b vedi-provincia" data-pv="<?= $riga['pv'] ?>"><i class="fe fe-eye"></i></button></td>
                                                 </tr>
                                             <?php endforeach; ?>
@@ -386,7 +428,7 @@ if (isset($_GET['a'])) {
                     <div class="col-sm-12 col-md-6">
                         <div class="card card-table-two">
                             <div class=" card-header p-0 d-flex justify-content-between">
-                                <h4 class="card-title mb-1">Migliori Clienti</h4>
+                                <h4 class="card-title mb-1">ALTRI STATI HO.RE.CA.</h4>
                                 <span class="tx-12 tx-muted mb-3 ">Anno <?= $anno ?></span>
                             </div>
 
@@ -394,22 +436,62 @@ if (isset($_GET['a'])) {
                                 <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
                                     <thead>
                                         <tr>
-                                            <th class="wd-lg-50p">Nome</th>
-                                            <th class="wd-lg-25p tx-right">Imponibile</th>
-                                            <th class="wd-lg-25p tx-right">Prov/Stato</th>
+                                            <th>Stato</th>
+                                            <th class="tx-right">Imponibile</th>
+                                            <th>n° fatt</th>
+                                            <th>n° bott</th>
                                             <th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $clienti = analisiMiglioriClienti($anno);
+                                        $clienti = analisiImponibilePerPaeseHome($anno);
                                         foreach ($clienti as $riga) :
                                         ?>
                                             <tr>
-                                                <td><?= $riga['nome_cliente']; ?></td>
+                                                <td><?= $riga['paese']; ?></td>
                                                 <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
-                                                <td class="tx-right tx-medium tx-inverse"><?= $riga['provincia']; ?></td>
-                                                <td class="tx-right tx-medium tx-inverse"><a href="analisi-clienti.php?c=<?= $riga['id_cfic'] ?>" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>
+                                                <td><?= $riga['numero_fatture']; ?></td>
+                                                <td><?= $riga['numero_bottiglie']; ?> bt</td>
+                                                <td class="tx-right tx-medium tx-inverse"><button class="btn btn-info btn-icon me-2 btn-b vedi-paese" data-pv="<?= $riga['paese'] ?>"><i class="fe fe-eye"></i></button></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card card-table-two">
+                            <div class=" card-header p-0 d-flex justify-content-between">
+                                <h4 class="card-title mb-1">WINE SHOP</h4>
+                                <span class="tx-12 tx-muted mb-3 ">Anno <?= $anno ?></span>
+                            </div>
+
+                            <div class="table-responsive country-table">
+                                <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Prov</th>
+                                            <th>Stato</th>
+                                            <th class="tx-right">Imponibile</th>
+                                            <th>n° fatt</th>
+                                            <th>n° bott</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        $clienti = analisiImponibileWineshopHome($anno);
+                                        foreach ($clienti as $riga) :
+                                        ?>
+                                            <tr>
+                                                <td><?= $riga['nome_provincia']; ?></td>
+                                                <td><?= $riga['paese']; ?></td>
+                                                <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
+                                                <td><?= $riga['numero_fatture']; ?></td>
+                                                <td><?= $riga['numero_bottiglie']; ?> bt</td>
+                                                <td class="tx-right tx-medium tx-inverse"><button class="btn btn-info btn-icon me-2 btn-b wineshop" data-paese="<?= $riga['paese'] ?>" data-pv="<?= $riga['nome_provincia'] ?>"><i class="fe fe-eye"></i></button></td>
                                             </tr>
                                         <?php endforeach; ?>
 
@@ -419,11 +501,53 @@ if (isset($_GET['a'])) {
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12">
+                            <div class="card card-table-two">
+                                <div class=" card-header p-0 d-flex justify-content-between">
+                                    <h4 class="card-title mb-1">Migliori Clienti HO.RE.CA.</h4>
+                                    <span class="tx-12 tx-muted mb-3 ">Anno <?= $anno ?></span>
+                                </div>
+
+                                <div class="table-responsive country-table">
+                                    <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th class="tx-right">Imponibile</th>
+                                                <th>n° fatt</th>
+                                                <th>n° bott</th>
+                                                <th class="tx-right">Pv/St</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $clienti = analisiMiglioriClienti($anno);
+                                            foreach ($clienti as $riga) :
+                                            ?>
+                                                <tr>
+                                                    <td><?= $riga['nome_cliente']; ?></td>
+                                                    <td class="tx-right tx-medium tx-inverse">€ <?= arrotondaEFormatta($riga['imponibile']); ?></td>
+                                                    <td><?= $riga['numero_fatture']; ?></td>
+                                                    <td><?= $riga['numero_bottiglie']; ?> bt</td>
+                                                    <td class="tx-right tx-medium tx-inverse"><?= $riga['provincia']; ?></td>
+                                                    <td class="tx-right tx-medium tx-inverse"><a href="analisi-clienti.php?c=<?= $riga['id_cfic'] ?>" class="btn btn-info btn-icon me-2 btn-b"><i class="fe fe-eye"></i></a></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             <!-- /Container -->
-        </div>
-        <!-- /main-content -->
+        </div> <!-- /main-content -->
 
         <!-- Footer opened -->
         <?php

@@ -38,10 +38,10 @@ include 'partials/header.php';
 								<div class="col-md-10 col-lg-10 col-xl-9 mx-auto">
 									<div class="card-sigin">
 										<div class="mb-5 d-flex">
-											<a href="index.php"><img src="assets/img/brand/favicon.png" class="sign-favicon-a ht-40" alt="logo">
-												<img src="assets/img/brand/favicon-white.png" class="sign-favicon-b ht-40" alt="logo">
+											<a href="index.php">
+												<img src="assets/img/brand/logo-bianco.png" class="sign-favicon-b" alt="logo">
 											</a>
-											<h1 class="main-logo1 ms-1 me-0 my-auto tx-28">CONFINIS</h1>
+											<!-- <h1 class="main-logo1 ms-1 me-0 my-auto tx-28">CONFINIS</h1> -->
 										</div>
 										<div class="card-sigin">
 											<div class="main-signup-header">

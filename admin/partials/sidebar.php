@@ -86,7 +86,7 @@
                                                 <li><a class="slide-item" href="analisi-vino.php">Analisi Vino</a></li>
                                                 <li><a class="slide-item" href="analisi-agenti.php">Analisi Agenti</a></li>
                                                 <li><a class="slide-item" href="analisi-clienti.php">Analisi Clienti</a></li>
-                                                <li><a class="slide-item" href="libera.php">Libera</a></li>
+                                                <li><a class="slide-item" href="libera2.php">Libera</a></li>
                                             </ul>
                                         </div>
                                     </div>

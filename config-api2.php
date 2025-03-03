@@ -60,27 +60,6 @@ try {
         $accessToken = refreshAccessToken($oauth, $refreshToken);
         echo 'refresh token';
     }
-    // else {
-    //     if (!isset($_GET['code'])) {
-    //         $url = $oauth->getAuthorizationUrl([Scope::ENTITY_SUPPLIERS_READ, Scope::ENTITY_CLIENTS_READ, Scope::ISSUED_DOCUMENTS_INVOICES_READ, Scope::PRODUCTS_READ], "EXAMPLE_STATE");
-    //         header('location: ' . $url);
-    //         exit;
-    //     } else {
-    //         // Se è presente il codice di autorizzazione, ottieni il token
-    //         $code = $_GET['code'];
-    //         $obj = $oauth->fetchToken($code);
-    //         if (!isset($obj->error)) {
-    //             //Salvo l'accesso token nel database .
-    //             $accessToken = $obj->getAccessToken();
-    //             saveAccessToken($accessToken, 'token');
-    //             $refreshToken = $obj->getRefreshToken();
-    //             saveAccessToken($refreshToken, 'refreshtoken');
-    //         } else {
-    //             // Gestire eventuali errori durante il recupero del token
-    //             die('Error fetching access token');
-    //         }
-    //     }
-    // }
 }
 
 

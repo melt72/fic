@@ -5,15 +5,16 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
 
     switch ($tipo) {
         case 'liquida':
+
             $id = $_POST['id_fattura'];
             $id_agente = $_POST['id_agente'];
             $anno = $_POST['anno'];
             $start = $_POST['start_date'];
-            $start_formato_originale = DateTime::createFromFormat('d/m/Y',  $start);
+            $start_formato_originale = DateTime::createFromFormat('d-m-Y',  $start);
             $start_formato_desiderato = $start_formato_originale->format('Y-m-d');
 
             $end = $_POST['end_date'];
-            $end_formato_originale = DateTime::createFromFormat('d/m/Y',  $end);
+            $end_formato_originale = DateTime::createFromFormat('d-m-Y',  $end);
             $end_formato_desiderato = $end_formato_originale->format('Y-m-d');
             $data_liquidazione = $_POST['data_liquidazione'];
             $data_formato_originale = DateTime::createFromFormat('d/m/Y',  $data_liquidazione);
@@ -38,7 +39,18 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&  strtolower($_SERVER['HTTP_X_RE
 
         case 'liquida_agente':
             $id_agente = $_POST['agente'];
-            $fatture_da_liquidare = getFattureDaLiquidareAgente($id_agente);
+            $anno = $_POST['anno'];
+            $start = $_POST['start_date'];
+            $start_formato_originale = DateTime::createFromFormat('d-m-Y',  $start);
+            $start_formato_desiderato = $start_formato_originale->format('Y-m-d');
+
+            $end = $_POST['end_date'];
+            $end_formato_originale = DateTime::createFromFormat('d-m-Y',  $end);
+            $end_formato_desiderato = $end_formato_originale->format('Y-m-d');
+
+
+
+            $fatture_da_liquidare = getFattureDaLiquidareAgente($id_agente, $start_formato_desiderato, $end_formato_desiderato);
             foreach ($fatture_da_liquidare as $fattura) {
                 $provvigione = arrotondaEFormatta($fattura['provvigione']);
 ?>

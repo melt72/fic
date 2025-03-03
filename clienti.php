@@ -28,7 +28,7 @@ foreach ($clienti as $cliente) {
     $stmt->bindParam('id', $id, PDO::PARAM_INT);
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$result) {
+    if (!$result) { // se il cliente non c'è lo inserisco
         $sql = "INSERT INTO clienti (id_cfic, nome, citta, provincia, paese) VALUES (:id, :name, :citta, :provincia, :paese)";
         $stmt = $db->prepare($sql);
         $stmt->bindParam('id', $id, PDO::PARAM_INT);
@@ -45,9 +45,18 @@ foreach ($clienti as $cliente) {
             $stmt->bindParam('zona', $zona, PDO::PARAM_STR);
             $stmt->execute();
         }
-    } else {
+    } else { // se il cliente c'è lo aggiorno
+        $sql = "UPDATE clienti SET nome = :name, citta = :citta, provincia = :provincia, paese = :paese WHERE id_cfic = :id";
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam('id', $id, PDO::PARAM_INT);
+        $stmt->bindParam('name', $name, PDO::PARAM_STR);
+        $stmt->bindParam('citta', $citta, PDO::PARAM_STR);
+        $stmt->bindParam('provincia', $provincia, PDO::PARAM_STR);
+        $stmt->bindParam('paese', $paese, PDO::PARAM_STR);
+        $stmt->execute();
+
         if (isset($prima_parte) && ($prima_parte == 'RSC')) {
-            $sql = "SELECT * FROM agenti_Roma WHERE id_cfic = :id";
+            $sql = "SELECT * FROM agenti_roma WHERE id_cfic = :id";
             $stmt = $db->prepare($sql);
             $stmt->bindParam('id', $id, PDO::PARAM_INT);
             $stmt->execute();

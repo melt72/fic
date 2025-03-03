@@ -46,6 +46,8 @@
 <script src="assets/plugins/chart.js/Chart.bundle.min.js"></script>
 
 <!--Internal Apexchart js-->
+<!--Internal Sumoselect js-->
+<script src="assets/plugins/sumoselect/jquery.sumoselect.js"></script>
 
 <script src="assets/js/apexcharts.js"></script>
 <!-- Apexchart js-->
@@ -53,13 +55,15 @@
 <script src="assets/js/jquery.vmap.sampledata.js"></script> -->
 <script src="assets/plugins/material-inputs/materialize-inputs.jquery.js"></script>
 <!-- custom js -->
-<script src="assets/js/custom.js?ver=1a223443"></script>
+<script src="assets/js/custom.js?ver=1a2235a13"></script>
 
 <!-- switcher-styles js -->
 <script src="assets/js/swither-styles.js"></script>
 
 <script src="assets/js/jquery.validate.js"></script>
 <!--Bootstrap-datepicker js-->
+<script src="assets/plugins/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
+<script src="assets/plugins/bootstrap-datepicker/bootstrap-datepicker.it.min.js"></script>
 <script src="assets/plugins/bootstrap-datepicker/bootstrap-datepicker.js"></script>
 <!-- Internal Select2.min js -->
 <script src="assets/plugins/select2/js/select2.min.js"></script>
@@ -71,6 +75,8 @@
 
 <!-- Moment js -->
 <script src="assets/plugins/moment/moment.js"></script>
+<script src="assets/plugins/moment/locale/it.js"></script>
+
 
 <!--Internal Sparkline js -->
 <script src="assets/plugins/jquery-sparkline/jquery.sparkline.min.js"></script>

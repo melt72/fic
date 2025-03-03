@@ -15,13 +15,14 @@ $data_start = date('d/m/Y', strtotime($start));
 $data_end = date('d/m/Y', strtotime($end));
 $diritto_agenzia = 0;
 $diritto = 0;
+include 'include/functions.php';
 // Decodifica la stringa JSON
 $array_id_fattura = json_decode(urldecode($fattureJson), true); //array con id_fattura
 
 // // Converti l'array di ID delle fatture in una stringa per l'uso nella query SQL
 $id_fatture_string = implode(',', $array_id_fattura);
 
-include 'include/functions.php';
+
 // Connessione al database
 include(__DIR__ . '/../include/configpdo.php');
 $campi = array('NOME', 'NF', 'DATA', 'IMPORTO', 'IVA', 'IMPONIBILE',  'IVA in €', ' ', 'PROVV €', 'ZONA');
@@ -223,7 +224,7 @@ foreach ($dati_prospetto as $row) {
                 }
                 //associo un colore per ogni zona
                 switch ($cell) {
-                        // le zone sono: Zona 1,Zona 3,Zona 4,Zona 5,Zona 6,Zona 7,Zona 9,Zona 10,Zona 11,Zona 15,Zona 00 speciale
+                    // le zone sono: Zona 1,Zona 3,Zona 4,Zona 5,Zona 6,Zona 7,Zona 9,Zona 10,Zona 11,Zona 15,Zona 00 speciale
                     case 'Zona 1':
                         $sheet1->getStyle($columnLetter . $rowNumber)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF0F0F0'); // Grigio chiaro
                         break;
@@ -498,7 +499,7 @@ try {
             WHERE
             z.id_zona = '19'
             ORDER BY
-            f.num_f ASC;";
+            f.num_f ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $dati   = $stmt->fetchAll();
@@ -516,7 +517,7 @@ try {
             $sheet->getStyle($columnLetter . $rowNumber)->getFont()->setBold(true);
             $columnLetter++;
         }
-        $dati_prospetto = array(); //array per i dati del prospetto 
+        $dati_prospetto_complesso_agenzia = array(); //array per i dati del prospetto 
 
         $rowNumber++;
         $rowNumber++;
@@ -537,7 +538,7 @@ try {
 
         //creazione dello schema
 
-        foreach ($dati_prospetto as $row) {
+        foreach ($dati_prospetto_complesso_agenzia as $row) {
             $columnLetter = 'A';
             foreach ($row as $cell) {
                 switch ($columnLetter) {
@@ -819,7 +820,7 @@ foreach ($dati_prospetto as $row) {
                 }
                 //associo un colore per ogni zona
                 switch ($cell) {
-                        // le zone sono: Zona 1,Zona 3,Zona 4,Zona 5,Zona 6,Zona 7,Zona 9,Zona 10,Zona 11,Zona 15,Zona 00 speciale
+                    // le zone sono: Zona 1,Zona 3,Zona 4,Zona 5,Zona 6,Zona 7,Zona 9,Zona 10,Zona 11,Zona 15,Zona 00 speciale
                     case 'Zona 1':
                         $sheet->getStyle($columnLetter . $rowNumber)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF0F0F0'); // Grigio chiaro
                         break;

@@ -184,7 +184,7 @@ function get_fatture($page = 1, $data_inizio = '0', $data_fine = '0')
             //$oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC    
 
             //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
-
+            $stato_invio = $issuedEInvoice->getEiStatus(); //stato invio fattura
             $paymentsList = $issuedEInvoice->getPaymentsList(); //lista pagamenti
             if (!empty($paymentsList)) {
                 $status = 'not_paid';
@@ -239,6 +239,7 @@ function get_fatture($page = 1, $data_inizio = '0', $data_fine = '0')
                 'imp_tot' => $imp_tot,
                 'note' => $oggetto,
                 'status' => $status,
+                'invio' => $stato_invio,
                 'data' => $data,
                 'data_scadenza' => $data_scadenza,
                 'data_pagamento' => $pagamento
@@ -249,7 +250,8 @@ function get_fatture($page = 1, $data_inizio = '0', $data_fine = '0')
                 $cod_prodotto = $prodotto->getCode(); // codice del prodotto
                 $nome_prodotto = $prodotto->getName(); // nome del prodotto
                 $quantita = $prodotto->getQty(); // quantità del prodotto
-                if ($quantita != '1') { //Escludo le quantità date in omaggio
+                $misura = $prodotto->getMeasure(); // misura del prodotto
+                if (($quantita != '1') || ($misura != 'PZ')) { //Escludo le quantità date in omaggio
                     // Aggiungere il prodotto e la quantità all'array
                     $lista_prodotti[] = array(
                         'id_prodotto' => $id_prodotto,
@@ -262,9 +264,6 @@ function get_fatture($page = 1, $data_inizio = '0', $data_fine = '0')
 
 
             $datiFattura['prodotti'] = $lista_prodotti;
-
-
-
             // Aggiungi l'array datiFattura all'array fatture_totali
             $fatture_totali[] = $datiFattura;
         }
@@ -359,7 +358,8 @@ function get_notedicredito($page = 1, $data_inizio = '0', $data_fine = '0')
 
                 $nome_prodotto = $prodotto->getName(); // nome del prodotto
                 $quantita = $prodotto->getQty(); // quantità del prodotto
-                if ($quantita != '1') { //Escludo le quantità date in omaggio
+                $misura = $prodotto->getMeasure(); // misura del prodotto
+                if (($quantita != '1') || ($misura != 'PZ')) { //Escludo le quantità date in omaggio
                     // Aggiungere il prodotto e la quantità all'array
                     $lista_prodotti[] = array(
                         'id' => $id,
@@ -403,6 +403,7 @@ function get_fattura($id_doc)
 
         $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
         $issuedEInvoices = $issuedEInvoicesApi->getIssuedDocument($firstCompanyId, $id_doc);
+
         $issuedEInvoice = $issuedEInvoices->getData();
         //Prelevo i dati della fattura
         $id = $issuedEInvoice->getId(); //id della fattura
@@ -414,6 +415,116 @@ function get_fattura($id_doc)
         $note2 = $issuedEInvoice->getSubject(); //note fattura visibile RSC
         $iva = $issuedEInvoice->getAmountVat(); //iva
         $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
+        $stato_invio = $issuedEInvoice->getEiStatus(); //stato invio fattura
+        //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
+
+        $paymentsList = $issuedEInvoice->getPaymentsList(); //lista pagamenti
+        if (!empty($paymentsList)) {
+            $status = 'not_paid';
+            $status = $paymentsList[0]->getStatus(); //stato della fattura
+            // Verificare se ci sono altre voci nell'elenco
+            if (count($paymentsList) > 1) {
+                // Ci sono altre voci nell'elenco
+                // Puoi fare qualcosa con le voci aggiuntive se necessario
+                // Ad esempio, iterare attraverso l'elenco e ottenere le informazioni
+                foreach ($paymentsList as $payment) {
+                    $status = $payment->getStatus();
+                    // Fai qualcosa con lo stato del pagamento...
+                }
+            }
+        } else {
+            $status = null;
+        }
+        //    $status = $issuedEInvoice->getPaymentsList()[0]->getStatus(); //stato della fattura
+
+        $data = $issuedEInvoice->getDate(); //data della fattura
+        //la data in formato aaaa-mm-gg
+        $data = $data->format('Y-m-d');
+        if ($issuedEInvoice->getPaymentsList()) {
+            $data_scadenza = $issuedEInvoice->getPaymentsList()[0]->getDueDate(); //data di scadenza della fattura 
+            $data_scadenza = $data_scadenza->format('Y-m-d');
+        } else {
+            $data_scadenza = null;
+        }
+        if ($issuedEInvoice->getPaymentsList()) {
+            $pagamento = $issuedEInvoice->getPaymentsList()[0]->getPaidDate(); //data di pagamento della fattura
+            if ($pagamento != null) {
+                $pagamento = $pagamento->format('Y-m-d');
+            } else {
+                $pagamento = '';
+            }
+        } else {
+            $pagamento = '';
+        }
+
+        //la data in formato aaaa-mm-gg
+        // $data_scadenza = $data_scadenza->format('Y-m-d');
+        $datiFattura = array(
+            'id' => $id,
+            'id_cliente' => $id_cliente,
+            'numero' => $numero,
+            'imp_netto' => $imp_netto,
+            'iva' => $iva,
+            'imp_tot' => $imp_tot,
+            'note' => $oggetto,
+            'note2' => $note2,
+            'status' => $status,
+            'status_invio' => $stato_invio,
+            'data' => $data,
+            'data_scadenza' => $data_scadenza,
+            'data_pagamento' => $pagamento
+
+        );
+        $prodotti_fattura = $issuedEInvoice->getItemsList();
+        foreach ($prodotti_fattura as $prodotto) {
+            $id_prodotto = $prodotto->getProductId(); // codice del prodotto
+            $cod_prodotto = $prodotto->getCode(); // codice del prodotto
+            $nome_prodotto = $prodotto->getName(); // nome del prodotto
+            $quantita = $prodotto->getQty(); // quantità del prodotto
+            $misura = $prodotto->getMeasure(); // misura del prodotto
+            if (($quantita != '1') || ($misura != 'PZ')) { //Escludo le quantità date in omaggio
+                // Aggiungere il prodotto e la quantità all'array
+                $lista_prodotti[] = array(
+                    'id_prodotto' => $id_prodotto,
+                    'cod_prodotto' => $cod_prodotto,
+                    'nome_prodotto' => $nome_prodotto,
+                    'quantita' => $quantita
+                );
+            }
+        }
+        $datiFattura['prodotti'] = $lista_prodotti;
+        //Ritorno array con i dati della fattura
+        return $datiFattura;
+    } catch (Exception $e) {
+        echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;
+    }
+}
+
+function get_fattura_invio($id_doc)
+{
+    include 'config-api2.php';
+    //array delle fatture
+    $fatture = array();
+    try {
+        // Retrieve the first company id
+        $companies = $userApi->listUserCompanies();
+
+        // se il tipo è all allora prelevo tutte le fatture
+
+        $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
+        $issuedEInvoices = $issuedEInvoicesApi->getIssuedDocument($firstCompanyId, $id_doc);
+        $issuedEInvoice = $issuedEInvoices->getData();
+        //Prelevo i dati della fattura
+        $id = $issuedEInvoice->getId(); //id della fattura
+        $id_cliente = $issuedEInvoice->getEntity()->getId();    //id cliente
+        $numero = $issuedEInvoice->getNumber(); //numero della fattura
+        $imp_netto = $issuedEInvoice->getAmountNet(); //importo netto
+        $note = $issuedEInvoice->getNotes(); //note fattura non visibile
+        $oggetto = $issuedEInvoice->getVisibleSubject(); //oggetto fattura visibile RSC
+        $note2 = $issuedEInvoice->getSubject(); //note fattura visibile RSC
+        $iva = $issuedEInvoice->getAmountVat(); //iva
+        $imp_tot = $issuedEInvoice->getAmountGross(); //importo totale
+        $stato_invio = $issuedEInvoice->getEiStatus(); //stato invio fattura
         //Per una determinata fattura possono essere stati fatti più pagamenti fino a quando tutto l'importo non è stato pagato la fattura si considera non pagata
 
         $paymentsList = $issuedEInvoice->getPaymentsList(); //lista pagamenti
@@ -452,6 +563,7 @@ function get_fattura($id_doc)
             'note' => $oggetto,
             'note2' => $note2,
             'status' => $status,
+            'status_invio' => $stato_invio,
             'data' => $data,
             'data_scadenza' => $data_scadenza
         );
@@ -461,7 +573,6 @@ function get_fattura($id_doc)
         echo 'Exception when calling the API: ', $e->getMessage(), PHP_EOL;
     }
 }
-
 //Funzione per prelevare lo status della fattura
 function get_status($id_doc)
 {
@@ -583,7 +694,7 @@ function determinaVarietaVino($nome_stringa)
     return "Varietà non trovata";
 }
 
-//Funzione che trova la lista di tutte le fatture non pagate
+//Funzione che trova la lista di tutte le fatture inviate e non pagate 
 function fatture_non_pagate($anno = 'default')
 {
     // Se l'anno non è specificato, usa l'anno corrente
@@ -591,7 +702,7 @@ function fatture_non_pagate($anno = 'default')
         $anno = date('Y');
     }
 
-    $sql = "SELECT id_ffic FROM fatture WHERE status = 'not_paid' AND YEAR(data_f) = '$anno'";
+    $sql = "SELECT id_ffic FROM fatture WHERE status = 'not_paid'  AND status_invio ='sent' AND YEAR(data_f) = '$anno'";
 
     // Connessione al database
     include 'include/configpdo.php';
@@ -615,7 +726,7 @@ function check_status($anno)
     $companies = $userApi->listUserCompanies();
     // se il tipo è all allora prelevo tutte le fatture
     $firstCompanyId = $companies->getData()->getCompanies()[1]->getId();
-    $field = 'status,paid_date';
+    $field = 'status,paid_date,ei_status';
     foreach ($fatture_non_pagate as $fattura) {
         $document_id = $fattura['id_ffic']; //id fattura
         echo 'fattura ' . $document_id . '<br>';
@@ -623,6 +734,8 @@ function check_status($anno)
             $issuedEInvoices = $issuedEInvoicesApi->getIssuedDocument($firstCompanyId, $document_id, $field, 'detailed');
             // Verifica se la risposta contiene dati
             if (!empty($issuedEInvoices)  && $issuedEInvoices->getData()) {
+
+                // Preleva i dati della fattura
                 $paymentsList = $issuedEInvoices->getData()->getPaymentsList();
 
                 // Controlla se ci sono dati nella lista dei pagamenti
